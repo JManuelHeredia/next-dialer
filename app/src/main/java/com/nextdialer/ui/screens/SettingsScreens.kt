@@ -11,12 +11,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
@@ -221,6 +224,25 @@ fun AppearanceScreen(
                 value = textSizeLabel(settings.textSize),
                 theme = theme,
                 onClick = { showTextSize = true },
+            )
+        }
+        item {
+            SettingsSliderRow(
+                title = "List row background",
+                valueLabel = "${settings.rowOpacity}%",
+                value = settings.rowOpacity.toFloat(),
+                valueRange = 0f..100f,
+                steps = 9,
+                theme = theme,
+                onValueChange = { store.setRowOpacity(it.toInt()) },
+            )
+        }
+        item {
+            SettingsNote(
+                text = "Row background applies to call history, contacts and dialpad search " +
+                    "results. 100% keeps the current theme opacity; lower values are more " +
+                    "transparent.",
+                theme = theme,
             )
         }
         item {
@@ -1023,7 +1045,11 @@ private fun AccentColorDialog(
         textContentColor = theme.textSecondary,
         title = { Text("Accent colour") },
         text = {
-            Column {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 440.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1056,43 +1082,74 @@ private fun AccentColorDialog(
                     }
                 }
                 Spacer(Modifier.height(10.dp))
+                Text(
+                    text = "Standard",
+                    color = theme.textSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.sp,
+                )
+                Spacer(Modifier.height(6.dp))
                 AccentChoices.chunked(6).forEach { row ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         row.forEach { argb ->
-                            val color = Color(argb)
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(color)
-                                    .border(
-                                        width = if (selected == argb) 2.dp else 1.dp,
-                                        color = if (selected == argb) {
-                                            theme.textPrimary
-                                        } else {
-                                            theme.divider
-                                        },
-                                        shape = CircleShape,
-                                    )
-                                    .clickable { onSelect(argb) },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                if (selected == argb) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Check,
-                                        contentDescription = "Selected",
-                                        tint = if (color.luminance() > 0.55f) {
-                                            Color.Black
-                                        } else {
-                                            Color.White
-                                        },
-                                        modifier = Modifier.size(18.dp),
-                                    )
-                                }
-                            }
+                            AccentSwatch(
+                                argb = argb,
+                                selected = selected,
+                                theme = theme,
+                                onSelect = onSelect,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                Text(
+                    text = "Light",
+                    color = theme.textSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.sp,
+                )
+                Spacer(Modifier.height(6.dp))
+                AccentLightChoices.chunked(6).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        row.forEach { argb ->
+                            AccentSwatch(
+                                argb = argb,
+                                selected = selected,
+                                theme = theme,
+                                onSelect = onSelect,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                Text(
+                    text = "Dark",
+                    color = theme.textSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.sp,
+                )
+                Spacer(Modifier.height(6.dp))
+                AccentDarkChoices.chunked(6).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        row.forEach { argb ->
+                            AccentSwatch(
+                                argb = argb,
+                                selected = selected,
+                                theme = theme,
+                                onSelect = onSelect,
+                            )
                         }
                     }
                     Spacer(Modifier.height(8.dp))
@@ -1105,6 +1162,38 @@ private fun AccentColorDialog(
             }
         },
     )
+}
+
+@Composable
+private fun AccentSwatch(
+    argb: Int,
+    selected: Int,
+    theme: DialerTheme,
+    onSelect: (Int) -> Unit,
+) {
+    val color = Color(argb)
+    Box(
+        modifier = Modifier
+            .size(34.dp)
+            .clip(CircleShape)
+            .background(color)
+            .border(
+                width = if (selected == argb) 2.dp else 1.dp,
+                color = if (selected == argb) theme.textPrimary else theme.divider,
+                shape = CircleShape,
+            )
+            .clickable { onSelect(argb) },
+        contentAlignment = Alignment.Center,
+    ) {
+        if (selected == argb) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = "Selected",
+                tint = if (color.luminance() > 0.55f) Color.Black else Color.White,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
 }
 
 private val AccentChoices = listOf(
@@ -1120,6 +1209,24 @@ private val AccentChoices = listOf(
     0xFFEC407A.toInt(),
     0xFF8E24AA.toInt(),
     0xFF5C6BC0.toInt(),
+)
+
+private val AccentLightChoices = listOf(
+    0xFFB3E5FC.toInt(),
+    0xFFB2DFDB.toInt(),
+    0xFFC8E6C9.toInt(),
+    0xFFFFF9C4.toInt(),
+    0xFFFFCDD2.toInt(),
+    0xFFF8BBD0.toInt(),
+)
+
+private val AccentDarkChoices = listOf(
+    0xFF0D47A1.toInt(),
+    0xFF00695C.toInt(),
+    0xFF1B5E20.toInt(),
+    0xFFE65100.toInt(),
+    0xFFB71C1C.toInt(),
+    0xFF4A148C.toInt(),
 )
 
 private fun accentLabel(argb: Int): String =

@@ -8,6 +8,12 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -65,6 +71,7 @@ import com.nextdialer.ui.components.DialpadBottomBar
 import com.nextdialer.ui.components.PermissionBanner
 import com.nextdialer.ui.components.SwipeActionRow
 import com.nextdialer.ui.components.callKindColor
+import com.nextdialer.ui.components.rowSurfaceColor
 import com.nextdialer.ui.theme.DialerTheme
 import com.nextdialer.ui.theme.LocalDialpadTextScale
 import com.nextdialer.ui.theme.LocalTextScale
@@ -105,6 +112,7 @@ fun DialpadScreen(
     onTapContact: (Contact) -> Unit,
     onTapCall: (CallEntry) -> Unit,
     onSwipeAction: (SwipeAction, CallEntry) -> Unit,
+    onSwipeContact: (SwipeAction, Contact) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenContacts: () -> Unit,
     onOpenRecents: () -> Unit,
@@ -324,6 +332,7 @@ fun DialpadScreen(
                 settings = settings,
                 theme = theme,
                 onTap = onTapContact,
+                onSwipeAction = onSwipeContact,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -344,7 +353,11 @@ fun DialpadScreen(
                 )
                 .padding(top = 10.dp),
         ) {
-            if (showKeypad) {
+            AnimatedVisibility(
+                visible = showKeypad,
+                enter = expandVertically(animationSpec = tween(200)) + fadeIn(tween(160)),
+                exit = shrinkVertically(animationSpec = tween(170)) + fadeOut(tween(120)),
+            ) {
                 Column(modifier = Modifier.padding(horizontal = 18.dp)) {
                     dialKeys.chunked(3).forEach { row ->
                         Row(modifier = Modifier.fillMaxWidth()) {
@@ -514,6 +527,7 @@ private fun MatchList(
     settings: DialerSettings,
     theme: DialerTheme,
     onTap: (Contact) -> Unit,
+    onSwipeAction: (SwipeAction, Contact) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (matches.isEmpty()) {
@@ -532,43 +546,62 @@ private fun MatchList(
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
     ) {
         items(matches, key = { it.id }) { contact ->
-            Row(
+            SwipeActionRow(
+                leftAction = if (settings.swipeEnabled) {
+                    settings.swipeLeftDialer
+                } else {
+                    SwipeAction.NONE
+                },
+                rightAction = if (settings.swipeEnabled) {
+                    settings.swipeRightDialer
+                } else {
+                    SwipeAction.NONE
+                },
+                enabled = settings.swipeEnabled,
+                theme = theme,
+                onAction = { onSwipeAction(it, contact) },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable { onTap(contact) }
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(vertical = 2.dp)
+                    .clip(RoundedCornerShape(16.dp)),
             ) {
-                ContactAvatar(
-                    name = contact.name,
-                    photoUri = contact.photoUri,
-                    size = 38.dp,
-                    theme = theme,
-                )
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = contact.name,
-                        color = theme.textPrimary,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(rowSurfaceColor(theme, settings.rowOpacity))
+                        .clickable { onTap(contact) }
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ContactAvatar(
+                        name = contact.name,
+                        photoUri = contact.photoUri,
+                        size = 38.dp,
+                        theme = theme,
                     )
-                    Text(
-                        text = contact.numbers.firstOrNull()?.number.orEmpty(),
-                        color = theme.textSecondary,
-                        fontSize = 12.sp,
-                        maxLines = 1,
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = contact.name,
+                            color = theme.textPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = contact.numbers.firstOrNull()?.number.orEmpty(),
+                            color = theme.textSecondary,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = null,
+                        tint = theme.textSecondary,
+                        modifier = Modifier.size(18.dp),
                     )
                 }
-                Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = null,
-                    tint = theme.textSecondary,
-                    modifier = Modifier.size(18.dp),
-                )
             }
         }
     }

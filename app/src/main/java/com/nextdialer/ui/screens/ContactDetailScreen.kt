@@ -94,8 +94,16 @@ fun ContactDetailScreen(
         value = loadDetail(number, contactId)
     }
 
-    val callCount = remember(calls, number) {
-        calls.filter { PhoneUtils.numbersMatch(it.number, number) }.sumOf { it.count }
+    val callCount = remember(calls, number, detail) {
+        val contact = detail?.contact
+        calls.filter { call ->
+            if (contact != null && contact.id > 0L) {
+                call.contactId == contact.id ||
+                    contact.numbers.any { PhoneUtils.numbersMatch(it.number, call.number) }
+            } else {
+                PhoneUtils.numbersMatch(call.number, number)
+            }
+        }.sumOf { it.count }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {

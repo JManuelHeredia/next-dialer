@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,6 +71,7 @@ fun RecentsScreen(
     onRequestPermissions: () -> Unit,
     initialQuery: String? = null,
     onInitialQueryHandled: () -> Unit = {},
+    summary: String? = null,
     onTap: (CallEntry) -> Unit,
     onSwipeAction: (SwipeAction, CallEntry) -> Unit,
     onDelete: (CallEntry) -> Unit,
@@ -130,6 +132,20 @@ fun RecentsScreen(
                 message = "Allow access to ${missing.joinToString(" and ")} to show names and recent calls.",
                 theme = theme,
                 onGrant = onRequestPermissions,
+            )
+        }
+
+        if (summary != null) {
+            Text(
+                text = summary,
+                color = theme.accent,
+                fontSize = 10.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.3.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp, bottom = 4.dp),
             )
         }
 

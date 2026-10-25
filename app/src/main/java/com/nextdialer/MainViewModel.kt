@@ -196,6 +196,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
     /**
+     * Individual call rows for a contact (all of its numbers) or for a single number. The global
+     * "merge calls" setting is intentionally ignored here: a history screen must list every call.
+     */
+    suspend fun historyFor(number: String?, contactId: Long?): List<CallEntry> =
+        withContext(Dispatchers.IO) {
+            val state = settingsStore.state.value
+            val contacts = _contacts.value
+            val contact = contactId?.let { id -> contacts.firstOrNull { it.id == id } }
+            runCatching {
+                repository.loadCalls(contacts, 0, state.callLogRangeDays)
+            }.getOrDefault(emptyList()).filter { call ->
+                when {
+                    contact != null -> {
+                        call.contactId == contact.id ||
+                            contact.numbers.any { PhoneUtils.numbersMatch(it.number, call.number) }
+                    }
+                    number != null -> PhoneUtils.numbersMatch(call.number, number)
+                    else -> false
+                }
+            }.sortedByDescending { it.date }
+        }
+
+    /**
      * Detail model for a number, whether or not it belongs to a stored contact. Used by the
      * per-number screen that opens from call history and contacts.
      */

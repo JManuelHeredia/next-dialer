@@ -7,7 +7,7 @@ sealed interface Route {
     data class Detail(val number: String, val contactId: Long?) : Route
 
     /** Recents pushed on top of a detail screen so Back returns to that detail. */
-    data class History(val number: String?) : Route
+    data class History(val number: String?, val contactId: Long?) : Route
 
     data object Settings : Route
     data object Appearance : Route

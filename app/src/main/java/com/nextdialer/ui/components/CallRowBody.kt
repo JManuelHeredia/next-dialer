@@ -69,7 +69,13 @@ fun CallRowBody(
     }
     val missed = call.kind == CallKind.MISSED
     val rightText = buildString {
-        append(callKindLabel(call.kind))
+        append(
+            if (call.kind == CallKind.OUTGOING && call.duration <= 0L) {
+                "Not answered"
+            } else {
+                callKindLabel(call.kind)
+            },
+        )
         Formatters.formatClockDuration(call.duration)
             .takeIf { it.isNotEmpty() }
             ?.let { append(' ').append(it) }
@@ -79,9 +85,7 @@ fun CallRowBody(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = rowHeight)
-            .background(
-                theme.surface.copy(alpha = if (theme.useWallpaper) 0.62f else 1f),
-            )
+            .background(rowSurfaceColor(theme, settings.rowOpacity))
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,

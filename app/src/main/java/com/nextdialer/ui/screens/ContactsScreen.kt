@@ -51,6 +51,7 @@ import com.nextdialer.ui.components.ListBottomBar
 import com.nextdialer.ui.components.PermissionBanner
 import com.nextdialer.ui.components.SearchHeader
 import com.nextdialer.ui.components.SwipeActionRow
+import com.nextdialer.ui.components.rowSurfaceColor
 import com.nextdialer.ui.theme.DialerTheme
 import com.nextdialer.ui.theme.LocalTextScale
 import com.nextdialer.util.DialerIntents
@@ -254,7 +255,7 @@ private fun ContactRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(theme.surface.copy(alpha = if (theme.useWallpaper) 0.62f else 1f))
+                .background(rowSurfaceColor(theme, settings.rowOpacity))
                 .clickable(onClick = onClick)
                 .padding(horizontal = 12.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,

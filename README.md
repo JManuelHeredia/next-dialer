@@ -6,12 +6,13 @@ app with contacts, call history, swipe actions, dimmed wallpaper, and optional b
 NEXT Dialer is a clean-room Kotlin / Jetpack Compose app. It does **not** require the old
 `com.modoohut.dialer.donate` key package and contains no Google Play licensing code.
 
-> Status: **Checkpoint 5 — list details, accent control, and theme previews**. The signed release
-> is built and verified on the API 28 emulator (company-field row confirmed on a physical phone).
-> It adds exDialer-style two/three-line call rows with company and last-call details, a full
-> accent-colour picker that recolours the Crystal status bar and highlights, minimal theme
-> previews, and full-height rounded swipe actions. See [docs/PLAN.md](docs/PLAN.md) for the
-> roadmap and [docs/DEVLOG.md](docs/DEVLOG.md) for the latest test/build notes.
+> Status: **Release candidate RC1 (C6)**. The signed APK is built and verified on the API 28
+> emulator, with the company field confirmed on a physical phone. RC1 adds swipeable dialpad
+> search results, animated keypad collapse/expand, full-swipe action thresholds with spacing,
+> light/dark accent swatches, adjustable list-row opacity, and a complete contact history that
+> lists every individual call across all of the contact's numbers.
+> See [docs/PLAN.md](docs/PLAN.md) for the roadmap and [docs/DEVLOG.md](docs/DEVLOG.md) for the
+> latest test/build notes.
 
 ## Screenshots
 
@@ -68,6 +69,12 @@ The Classic (opaque) theme for comparison:
 | ![History from detail](docs/screenshots/c5-history-from-detail.png) | ![Swipe reveal](docs/screenshots/c5-swipe-reveal.png) |
 
 
+### Release candidate RC1 (C6)
+
+| Complete contact history | Swipeable search result | Row opacity |
+| --- | --- | --- |
+| ![Contact history](docs/screenshots/c6-contact-history.png) | ![Search swipe](docs/screenshots/c6-search-swipe.png) | ![Row opacity](docs/screenshots/c6-row-opacity.png) |
+
 ## Why two apps?
 
 | App | Package | Purpose |
@@ -79,28 +86,32 @@ The legacy build is at `builds/legacy/exDialer-198-unlocked.apk`. It is the orig
 the Pro/key check neutralised; it still uses the original package name so it can coexist with
 NEXT Dialer.
 
-## Features in Checkpoint 5
+## Features in RC1
 
 - Dialpad with DTMF tones, haptics, long-press `0` for `+`, long-press backspace to clear.
 - Five-slot dialpad bar (paste · contacts · call · backspace · overflow) with balanced padding.
+- **Animated keypad collapse**: scrolling the recent list hides the keys smoothly and swaps the
+  call button for SHOW DIALPAD; tapping it animates the keys back without losing scroll position.
+- **Swipeable dialpad search results**, using the same configured swipe actions as call rows.
 - exDialer-style call rows: name (or number), number with type for contacts, call-type icon and
   date, and the last call's type and duration on the right. The contact company/organisation is
-  shown in the right-hand details block when available.
-- T9 contact search while typing, opt-in clipboard paste, and speed-dial long-press.
-- **Per-number detail screen**: Call / Message / Add-or-Edit / Share, every stored number,
-  call total, filtered call history, and installed WhatsApp/Telegram chat links.
-- **Accent colour picker** in Appearance with 12 colours plus the theme default. The choice
-  recolours the Crystal status-bar tint, dialpad digits, sliders, switches and highlights.
+  shown in the right-hand details block when available. Unanswered outgoing calls read
+  “Not answered”.
+- **Complete contact history**: “N CALLS TOTAL” opens every individual call across all of the
+  contact's numbers, ignoring the merge setting; Back returns to the contact detail.
+- **Swipe reveal spacing and full-swipe actions**: 16 dp start threshold, 4 dp gap between the
+  row and the action panel, actions only when the swipe reaches full reveal.
+- **Accent colour picker** with standard, light and dark swatches plus the theme default. The
+  choice recolours the Crystal status-bar tint, dialpad digits, sliders, switches and highlights.
+- **List row background** slider (0–100 % of the theme's current opacity) shared by call rows,
+  contact rows and dialpad search results.
 - Theme picker uses **minimal layout previews** built from Compose shapes (no images).
-- **Collapsible dialpad**: scrolling the recent list hides the keypad and swaps the green call
-  button for a SHOW DIALPAD action; tapping it restores the keypad without losing scroll position.
 - **Call-log range** setting (All / 1 / 2 / 3 / 6 months / 1 year), defaulting to All, with the
   previous 1,000-row cap removed. (If an OEM provider itself prunes older rows, the app can only
   show what the provider returns.)
-- **History navigation fix**: opening call history from a contact keeps it on the back stack, so
-  Back returns to the contact detail instead of exiting the app.
-- **Swipe reveal panels** now fill the row height and are rounded on both edges, with an icon
-  and label.
+- T9 contact search while typing, opt-in clipboard paste, and speed-dial long-press.
+- **Per-number detail screen**: Call / Message / Add-or-Edit / Share, every stored number,
+  call total, complete history, and installed WhatsApp/Telegram chat links.
 - Recents grouped by day, colour-coded call types, relative/absolute time, and call-back.
 - **Call-log merging** by person or phone number, with an optional "N calls" count.
 - **Missed-call badge** on Recents and a summary notification that also drives the launcher
@@ -110,8 +121,9 @@ NEXT Dialer.
   confirm first).
 - **Favourites** — All/Favourites pills inside Contacts.
 - Contacts list with alphabet index, search, avatars, and contact details.
-- **Swipe actions** for recents, contacts, and the dialpad's recent list: Call / Message /
-  View details / VoIP / Delete history / None, with labelled reveal panels.
+- **Swipe actions** for recents, contacts, dialpad recent calls and dialpad search results:
+  Call / Message / View details / VoIP / Delete history / None, with labelled, full-height,
+  rounded reveal panels.
 - Fixed "RECENT CALLS" legend above the dialpad list; the list scrolls under it.
 - Configurable tap actions, call confirmation, and short-number speed dial.
 - Crystal (real system wallpaper), Crystal Simp, Lollipop, Simplism, and Classic themes.
@@ -149,7 +161,7 @@ development key; replace it for any public distribution.
 ## Install and test
 
 ```powershell
-adb install -r builds\next-dialer-0.1.0-c5.apk
+adb install -r builds\next-dialer-0.2.0-rc1.apk
 adb shell pm grant com.nextdialer android.permission.READ_CONTACTS
 adb shell pm grant com.nextdialer android.permission.READ_CALL_LOG
 adb shell pm grant com.nextdialer android.permission.WRITE_CALL_LOG

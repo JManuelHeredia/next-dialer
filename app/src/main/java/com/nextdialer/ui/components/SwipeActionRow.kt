@@ -94,9 +94,11 @@ fun SwipeActionRow(
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
     val maxRevealPx = with(density) { 132.dp.toPx() }
-    val thresholdPx = with(density) { 64.dp.toPx() }
+    val startSlopPx = with(density) { 16.dp.toPx() }
+    val gapPx = with(density) { 4.dp.toPx() }
     var offset by remember { mutableFloatStateOf(0f) }
     var busy by remember { mutableStateOf(false) }
+    val dragAccum = remember { floatArrayOf(0f) }
 
     Box(modifier = modifier.fillMaxWidth()) {
         val revealedLeft = (-offset).coerceAtLeast(0f)
@@ -141,17 +143,26 @@ fun SwipeActionRow(
 
         Box(
             modifier = Modifier
-                .offset { IntOffset(offset.roundToInt(), 0) }
-                .pointerInput(enabled, leftAction, rightAction, thresholdPx, maxRevealPx) {
+                .offset {
+                    val visual = when {
+                        offset < 0f -> offset - gapPx
+                        offset > 0f -> offset + gapPx
+                        else -> 0f
+                    }
+                    IntOffset(visual.roundToInt(), 0)
+                }
+                .pointerInput(enabled, leftAction, rightAction, maxRevealPx, startSlopPx) {
                     if (!enabled) return@pointerInput
                     detectHorizontalDragGestures(
+                        onDragStart = { dragAccum[0] = 0f },
                         onDragEnd = {
+                            dragAccum[0] = 0f
                             if (!busy) {
                                 val swipedLeft = offset < 0f
                                 val action = when {
-                                    swipedLeft && offset <= -thresholdPx &&
+                                    swipedLeft && offset <= -maxRevealPx + 0.5f &&
                                         leftAction != SwipeAction.NONE -> leftAction
-                                    !swipedLeft && offset >= thresholdPx &&
+                                    !swipedLeft && offset >= maxRevealPx - 0.5f &&
                                         rightAction != SwipeAction.NONE -> rightAction
                                     else -> null
                                 }
@@ -176,6 +187,7 @@ fun SwipeActionRow(
                             }
                         },
                         onDragCancel = {
+                            dragAccum[0] = 0f
                             scope.launch {
                                 animate(offset, 0f, animationSpec = tween(160)) { value, _ ->
                                     offset = value
@@ -185,7 +197,14 @@ fun SwipeActionRow(
                         onHorizontalDrag = { change, dragAmount ->
                             change.consume()
                             if (!busy) {
-                                offset = (offset + dragAmount).coerceIn(
+                                dragAccum[0] += dragAmount
+                                val accumulated = dragAccum[0]
+                                val effective = when {
+                                    accumulated > startSlopPx -> accumulated - startSlopPx
+                                    accumulated < -startSlopPx -> accumulated + startSlopPx
+                                    else -> 0f
+                                }
+                                offset = effective.coerceIn(
                                     -maxRevealPx,
                                     maxRevealPx,
                                 )

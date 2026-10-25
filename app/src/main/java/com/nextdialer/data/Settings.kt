@@ -16,6 +16,8 @@ data class DialerSettings(
     val displayPhoto: Boolean = true,
     val fullScreen: Boolean = false,
     val textSize: Int = 0,
+    /** Percent of the theme's default list-row opacity; 100 = current/default. */
+    val rowOpacity: Int = 100,
     val colorCalls: Boolean = false,
     val relativeTime: Boolean = true,
     val displayTime: Boolean = false,
@@ -93,6 +95,7 @@ class SettingsStore(context: Context) {
             displayPhoto = prefs.getBoolean("display_photo", true),
             fullScreen = prefs.getBoolean("full_screen", false),
             textSize = prefs.getInt("text_size", 0),
+            rowOpacity = prefs.getInt("row_opacity", 100),
             colorCalls = prefs.getBoolean("color_calls", false),
             relativeTime = prefs.getBoolean("relative_time", true),
             displayTime = prefs.getBoolean("display_time", false),
@@ -154,6 +157,7 @@ class SettingsStore(context: Context) {
     fun setDisplayPhoto(value: Boolean) = edit { putBoolean("display_photo", value) }
     fun setFullScreen(value: Boolean) = edit { putBoolean("full_screen", value) }
     fun setTextSize(value: Int) = edit { putInt("text_size", value) }
+    fun setRowOpacity(value: Int) = edit { putInt("row_opacity", value.coerceIn(0, 100)) }
     fun setColorCalls(value: Boolean) = edit { putBoolean("color_calls", value) }
     fun setRelativeTime(value: Boolean) = edit { putBoolean("relative_time", value) }
     fun setDisplayTime(value: Boolean) = edit { putBoolean("display_time", value) }

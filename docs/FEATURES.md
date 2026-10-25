@@ -78,7 +78,13 @@ same defaults where the feature is kept.
 | — | — | **New** | **Delete call** — long-press a Recents row to delete the whole merged group (needs `WRITE_CALL_LOG`). |
 | — | — | **New** | **Clear call history** in Advanced, with confirmation (needs `WRITE_CALL_LOG`). |
 | — | — | **New** | **Delete call history for this number** as a swipe action; confirms, then removes every call-log row matching the number (uses `ContentResolver.delete` and `WRITE_CALL_LOG`). |
-| — | — | **New** | **Accent colour** override in Appearance: 12 swatches plus theme default. Recolours the Crystal status bar and accent components. |
+| — | — | **New** | **Dialpad search results** use the configured swipe actions, matching contacts behaviour. |
+| — | — | **New** | **Animated keypad** collapse/expand when scrolling the recent list; SHOW DIALPAD restores it. |
+| — | — | **New** | **Swipe threshold/spacing**: 16 dp dead zone before the reveal starts, 4 dp gap to the row, actions fire only at full reveal. |
+| — | — | **New** | **Accent light/dark palettes** added to the standard swatches and theme default. |
+| — | — | **New** | **List row background** opacity (0–100 % of the theme default) for call rows, contact rows and search results. |
+| — | — | **New** | **Complete contact history**: all individual calls across every number of the contact, unmerged, with a fixed total header. |
+| — | — | **New** | **Not answered** label for outgoing calls with zero duration. |
 | — | — | **New** | **Show calls from** range (All / 1 / 2 / 3 / 6 months / 1 year). Default All; the 1,000-row limit was removed. |
 | — | — | **New** | **Collapsible dialpad** while scrolling the recent list; the call button becomes SHOW DIALPAD. |
 | — | — | **New** | **Call row layout** mirrors exDialer: name or number, number line, type icon/date, and last-call type/duration. Contact company appears on the right. |
@@ -88,6 +94,11 @@ same defaults where the feature is kept.
 | — | — | **New** | Fixed "RECENT CALLS" legend above the dialpad's recent list (does not scroll away). |
 | — | — | **New** | Symmetric five-slot dialpad bar: paste · contacts · call · backspace · overflow, with horizontal and bottom padding. |
 | — | — | **New** | Swipe reveal panels now show an icon plus a short label (Call / SMS / View / VoIP / Delete). |
+
+Contact-history completeness is **not** an Android API limitation. The call-log provider returns
+the individual rows; the earlier NEXT Dialer history screen reused the merged Recents list and
+filtered to the tapped number, so it hid the other calls. C6 loads unmerged rows for every number
+of the contact. If an OEM prunes old call-log rows, that remains a platform-level limit.
 
 ## Language and Filter (deferred)
 

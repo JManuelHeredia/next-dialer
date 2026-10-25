@@ -284,3 +284,42 @@
 
 - Remaining appearance work (C6): day/night second theme, text/dialpad refinements, scrim presets.
 - Remaining Behaviour work (C7), then Advanced (C8) and release polish (C9).
+
+## 2026-10-25 — C6: interaction polish and RC1
+
+### Implementation
+
+- Added `SwipeActionRow` to dialpad search results, using the dialer swipe settings.
+- Keypad collapse/expand now uses `AnimatedVisibility` (`expandVertically`/`shrinkVertically`
+  plus fade) instead of a hard show/hide.
+- Swipe interaction:
+  - 16 dp drag dead zone before the row starts moving;
+  - 4 dp visual gap between the row and the action panel;
+  - actions fire only when the swipe reaches the full 132 dp reveal.
+- Accent picker gained **Light** and **Dark** groups (six swatches each) alongside the standard
+  palette and theme default; the dialog scrolls if needed.
+- Appearance gained **List row background** (0–100 % of the theme's default opacity). It is used
+  by `CallRowBody`, contact rows and dialpad search rows.
+- Call history completeness:
+  - Root cause was not an API limit: the history screen reused the merged Recents data and
+    filtered to one number. exDialer's contact history lists individual calls for all numbers.
+  - Added `MainViewModel.historyFor(number, contactId)`, which loads unmerged rows and matches
+    every number belonging to the contact.
+  - `Route.History` now carries the contact id; the History screen gets those rows, shows a fixed
+    `N CALLS TOTAL` header, and remains on the back stack.
+  - Contact detail call totals are contact-wide (all numbers), not just the tapped number.
+- Outgoing calls with zero duration are labelled “Not answered”.
+
+### Build/test (RC1)
+
+- `builds/next-dialer-0.2.0-rc1.apk` (versionCode 6, `0.2.0-rc1`, 11.57 MB, signed).
+- Verified on API 28: search-result swipe reveals and triggers SMS at full reveal; 4 dp gap
+  visible; keypad collapse/expand; complete 4-row unmerged history for a contact with a fixed
+  “4 CALLS TOTAL” header; Back returns to the detail.
+- Row-background slider and accent dialog compiled and render in Appearance.
+
+### Next
+
+- Manual RC1 pass on the physical phone, especially the complete 16-call GS history, animated
+  keypad, and the new light/dark accent swatches.
+- Then remaining appearance (C7), Behaviour (C8), Advanced (C9), and final release polish.

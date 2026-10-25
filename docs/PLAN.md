@@ -162,7 +162,21 @@ which is deferred.
 - Call history opened from a contact is pushed on the back stack, so Back returns to the contact
   detail rather than exiting the app.
 
-### C6 — Appearance completion
+### C6 — Interaction polish and RC1 (complete)
+
+- Dialpad search results use the configured swipe actions.
+- Keypad hide/show uses expand/shrink + fade animations.
+- Swipe drag has a 16 dp start threshold, a 4 dp gap before the action panel, and only fires the
+  action at full reveal.
+- Accent picker gains light and dark palettes (plus standard and theme default).
+- Appearance option for list-row background opacity (0–100 % of the theme default), shared by
+  call rows, contact rows and dialpad search results.
+- Complete contact history: every individual call across all of the contact's numbers, ignoring
+  the merge setting, with a fixed N CALLS TOTAL header; Back returns to the detail.
+- Outgoing calls with no duration show “Not answered”.
+- RC1 release: `next-dialer-0.2.0-rc1.apk`.
+
+### C7 — Appearance completion
 
 - Theme switch time (day/night second theme).
 - Text-size and dialpad-size refinements across all screens.
@@ -170,7 +184,7 @@ which is deferred.
 - Optional "transparent panels" / scrim strength presets.
 - Badge styling polish (colour, size, max count display).
 
-### C7 — Behaviour completion
+### C8 — Behaviour completion
 
 - Speed-dial polish and validation.
 - Clipboard number parsing improvements.
@@ -178,14 +192,14 @@ which is deferred.
 - Contact-detail → call-log switch option (filtered history already ships in C4).
 - External contact viewer chooser.
 
-### C8 — Advanced
+### C9 — Advanced
 
 - JSON backup/restore through the Storage Access Framework.
 - Optional default-dialer role request and `ACTION_DIAL` integration.
 - Dual-SIM awareness where the platform exposes it.
 - Roaming/national-number handling.
 
-### C9 — Polish and release
+### C10 — Polish and release
 
 - Tablet/foldable layout.
 - Accessibility pass (TalkBack, touch targets, contrast).

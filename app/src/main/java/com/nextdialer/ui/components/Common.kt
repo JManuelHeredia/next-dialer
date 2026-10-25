@@ -556,6 +556,16 @@ fun callKindColor(kind: CallKind, theme: DialerTheme, colorCalls: Boolean): Colo
     else -> theme.textSecondary
 }
 
+/**
+ * Background for list rows (call log, contacts and dialpad search). The slider is a percentage
+ * of the theme's current opacity, so 100 % keeps the existing look and 0 % is fully transparent.
+ */
+fun rowSurfaceColor(theme: DialerTheme, opacityPercent: Int): Color {
+    val base = if (theme.useWallpaper) 0.62f else 1f
+    val factor = opacityPercent.coerceIn(0, 100) / 100f
+    return theme.surface.copy(alpha = base * factor)
+}
+
 fun callKindLabel(kind: CallKind): String = when (kind) {
     CallKind.INCOMING -> "Incoming"
     CallKind.OUTGOING -> "Outgoing"

@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -203,6 +204,7 @@ fun AppRoot(
                     onTabRequestHandled = { requestedTab = null },
                     requestedQuery = null,
                     onQueryHandled = {},
+                    historySummary = null,
                 )
 
                 is Route.Detail -> ContactDetailScreen(
@@ -215,33 +217,49 @@ fun AppRoot(
                     onBack = ::pop,
                     onPlaceCall = ::placeCall,
                     onViewCalls = {
-                        push(Route.History(current.number))
+                        push(Route.History(current.number, current.contactId))
                     },
                     onDeleteHistory = { pendingDeleteNumber = it },
                 )
 
-                is Route.History -> MainScaffold(
-                    settings = settings,
-                    store = store,
-                    theme = theme,
-                    contacts = contacts,
-                    calls = calls,
-                    missedCount = missedCount,
-                    contactsGranted = contactsGranted,
-                    callLogGranted = callLogGranted,
-                    phoneGranted = phoneGranted,
-                    onRequestPermissions = onRequestPermissions,
-                    onSettings = { push(Route.Settings) },
-                    onPlaceCall = ::placeCall,
-                    onRunAction = ::runAction,
-                    onRunTap = ::runTap,
-                    onDeleteCalls = viewModel::deleteCalls,
-                    callStarted = callStarted,
-                    requestedTab = MainTab.RECENTS,
-                    onTabRequestHandled = {},
-                    requestedQuery = current.number,
-                    onQueryHandled = {},
-                )
+                is Route.History -> {
+                    val historyCalls by produceState(
+                        initialValue = emptyList<com.nextdialer.data.CallEntry>(),
+                        current.number,
+                        current.contactId,
+                        calls,
+                    ) {
+                        value = viewModel.historyFor(current.number, current.contactId)
+                    }
+                    MainScaffold(
+                        settings = settings,
+                        store = store,
+                        theme = theme,
+                        contacts = contacts,
+                        calls = historyCalls,
+                        missedCount = missedCount,
+                        contactsGranted = contactsGranted,
+                        callLogGranted = callLogGranted,
+                        phoneGranted = phoneGranted,
+                        onRequestPermissions = onRequestPermissions,
+                        onSettings = { push(Route.Settings) },
+                        onPlaceCall = ::placeCall,
+                        onRunAction = ::runAction,
+                        onRunTap = ::runTap,
+                        onDeleteCalls = viewModel::deleteCalls,
+                        callStarted = callStarted,
+                        requestedTab = MainTab.RECENTS,
+                        onTabRequestHandled = {},
+                        requestedQuery = null,
+                        onQueryHandled = {},
+                        historySummary = if (historyCalls.isEmpty()) {
+                            null
+                        } else {
+                            "${historyCalls.size} " +
+                                if (historyCalls.size == 1) "CALL TOTAL" else "CALLS TOTAL"
+                        },
+                    )
+                }
 
                 Route.Settings -> SettingsScreen(
                     settings = settings,
@@ -379,6 +397,7 @@ private fun MainScaffold(
     onTabRequestHandled: () -> Unit,
     requestedQuery: String?,
     onQueryHandled: () -> Unit,
+    historySummary: String?,
 ) {
     val initialTab = remember {
         when {
@@ -430,6 +449,7 @@ private fun MainScaffold(
                 onRequestPermissions = onRequestPermissions,
                 initialQuery = requestedQuery,
                 onInitialQueryHandled = onQueryHandled,
+                summary = historySummary,
                 onTap = { call ->
                     onRunTap(
                         settings.tapDialer,
@@ -486,6 +506,9 @@ private fun MainScaffold(
                 onSwipeAction = { action, call ->
                     onRunAction(action, call.number, call.contactId)
                 },
+                onSwipeContact = { action, contact ->
+                    onRunAction(action, contact.primaryNumber, contact.id)
+                },
                 onOpenSettings = onSettings,
                 onOpenContacts = { tab = MainTab.CONTACTS },
                 onOpenRecents = { tab = MainTab.RECENTS },
@@ -499,7 +522,7 @@ private fun MainScaffold(
 private fun routeKey(route: Route): String = when (route) {
     Route.Main -> "main"
     is Route.Detail -> "detail-${route.contactId ?: "x"}-${route.number}"
-    is Route.History -> "history-${route.number ?: "all"}"
+    is Route.History -> "history-${route.contactId ?: "x"}-${route.number ?: "all"}"
     Route.Settings -> "settings"
     Route.Appearance -> "appearance"
     Route.Behaviour -> "behaviour"
