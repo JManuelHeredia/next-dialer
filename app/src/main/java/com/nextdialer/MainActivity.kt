@@ -25,6 +25,7 @@ import com.nextdialer.data.DialerSettings
 import com.nextdialer.ui.AppRoot
 import com.nextdialer.ui.theme.DialerTheme
 import com.nextdialer.ui.theme.DialerThemes
+import com.nextdialer.ui.theme.withAccentOverride
 import com.nextdialer.ui.theme.LocalDialpadTextScale
 import com.nextdialer.ui.theme.LocalTextScale
 import com.nextdialer.ui.theme.NextDialerTheme
@@ -58,6 +59,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settings by store.state.collectAsState()
             val theme = DialerThemes.byId(settings.themeId)
+                .withAccentOverride(settings.accentColor)
             val context = LocalContext.current
 
             SideEffect {

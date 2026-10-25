@@ -146,7 +146,23 @@ which is deferred.
   button.
 - Swipe reveal panels now pair icons with short labels.
 
-### C5 — Appearance completion
+### C5 — List details, accents, and theme previews (complete)
+
+- exDialer-style call rows: name/number, number line for contacts, type icon + date, and the
+  last call's type and duration on the right. Contact company/organisation is included.
+- Fixed minimum row height so rows without a name or company do not shrink.
+- Accent colour override for Crystal's blue status bar, digits, sliders, switches and highlights,
+  with a 12-colour picker and a "theme default" reset.
+- Theme picker now uses minimal Compose-drawn screen previews instead of colour dots.
+- Swipe reveals fill the row height and are rounded on both edges; label threshold reduced.
+- Scrolling the dialpad's recent list collapses the keypad and turns the call button into
+  SHOW DIALPAD; the action restores the keys and keeps the scroll position.
+- "Show calls from" range setting (All / 1 / 2 / 3 / 6 months / 1 year), with the old 1,000-row
+  cap removed so the whole provider log can be loaded.
+- Call history opened from a contact is pushed on the back stack, so Back returns to the contact
+  detail rather than exiting the app.
+
+### C6 — Appearance completion
 
 - Theme switch time (day/night second theme).
 - Text-size and dialpad-size refinements across all screens.
@@ -154,7 +170,7 @@ which is deferred.
 - Optional "transparent panels" / scrim strength presets.
 - Badge styling polish (colour, size, max count display).
 
-### C6 — Behaviour completion
+### C7 — Behaviour completion
 
 - Speed-dial polish and validation.
 - Clipboard number parsing improvements.
@@ -162,14 +178,14 @@ which is deferred.
 - Contact-detail → call-log switch option (filtered history already ships in C4).
 - External contact viewer chooser.
 
-### C7 — Advanced
+### C8 — Advanced
 
 - JSON backup/restore through the Storage Access Framework.
 - Optional default-dialer role request and `ACTION_DIAL` integration.
 - Dual-SIM awareness where the platform exposes it.
 - Roaming/national-number handling.
 
-### C8 — Polish and release
+### C9 — Polish and release
 
 - Tablet/foldable layout.
 - Accessibility pass (TalkBack, touch targets, contrast).

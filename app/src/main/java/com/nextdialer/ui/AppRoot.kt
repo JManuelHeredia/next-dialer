@@ -65,7 +65,7 @@ fun AppRoot(
         MissedCallNotifier.update(context, missedCount, settings.badgeCount)
     }
 
-    LaunchedEffect(settings.mergeBy) {
+    LaunchedEffect(settings.mergeBy, settings.callLogRangeDays) {
         viewModel.reload()
     }
 
@@ -115,7 +115,6 @@ fun AppRoot(
     var pendingDeleteNumber by remember { mutableStateOf<String?>(null) }
     var callStarted by remember { mutableIntStateOf(0) }
     var requestedTab by remember { mutableStateOf<MainTab?>(null) }
-    var recentsQuery by remember { mutableStateOf<String?>(null) }
 
     fun dialNow(number: String) {
         DialerIntents.call(context, number)
@@ -202,8 +201,8 @@ fun AppRoot(
                     callStarted = callStarted,
                     requestedTab = requestedTab,
                     onTabRequestHandled = { requestedTab = null },
-                    requestedQuery = recentsQuery,
-                    onQueryHandled = { recentsQuery = null },
+                    requestedQuery = null,
+                    onQueryHandled = {},
                 )
 
                 is Route.Detail -> ContactDetailScreen(
@@ -216,12 +215,32 @@ fun AppRoot(
                     onBack = ::pop,
                     onPlaceCall = ::placeCall,
                     onViewCalls = {
-                        routes.clear()
-                        routes.add(Route.Main)
-                        requestedTab = MainTab.RECENTS
-                        recentsQuery = current.number
+                        push(Route.History(current.number))
                     },
                     onDeleteHistory = { pendingDeleteNumber = it },
+                )
+
+                is Route.History -> MainScaffold(
+                    settings = settings,
+                    store = store,
+                    theme = theme,
+                    contacts = contacts,
+                    calls = calls,
+                    missedCount = missedCount,
+                    contactsGranted = contactsGranted,
+                    callLogGranted = callLogGranted,
+                    phoneGranted = phoneGranted,
+                    onRequestPermissions = onRequestPermissions,
+                    onSettings = { push(Route.Settings) },
+                    onPlaceCall = ::placeCall,
+                    onRunAction = ::runAction,
+                    onRunTap = ::runTap,
+                    onDeleteCalls = viewModel::deleteCalls,
+                    callStarted = callStarted,
+                    requestedTab = MainTab.RECENTS,
+                    onTabRequestHandled = {},
+                    requestedQuery = current.number,
+                    onQueryHandled = {},
                 )
 
                 Route.Settings -> SettingsScreen(
@@ -480,6 +499,7 @@ private fun MainScaffold(
 private fun routeKey(route: Route): String = when (route) {
     Route.Main -> "main"
     is Route.Detail -> "detail-${route.contactId ?: "x"}-${route.number}"
+    is Route.History -> "history-${route.number ?: "all"}"
     Route.Settings -> "settings"
     Route.Appearance -> "appearance"
     Route.Behaviour -> "behaviour"

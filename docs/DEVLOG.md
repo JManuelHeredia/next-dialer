@@ -236,3 +236,51 @@
 
 - Appearance completion (C5) and then the remaining Behaviour items (C6).
 - Re-verify the labelled swipe reveal and cross-window blur on the physical Android 13 device.
+
+## 2026-10-25 — C5: list details, accents, previews, and navigation fixes
+
+### Implementation
+
+- Added `CallRowBody`, shared by Recents and the dialpad recent list:
+  - line 1: contact name, or the number when unknown;
+  - line 2: number type + number for contacts, ellipsized;
+  - line 3: call-type icon + date, plus merged count when enabled;
+  - right side: contact organisation/company and the last call's type + `mm:ss` duration.
+- Rows have a fixed minimum height (`78 dp` lists, `68 dp` dialpad) so missing fields no longer
+  produce visibly shorter rows.
+- Loaded contact organisations from `ContactsContract.Data` (`Organization.COMPANY`) in the same
+  contacts pass, and attached the company to matching call entries.
+- Added an accent-colour setting (`accent_color`, ARGB, 0 = theme default):
+  - 12-swatch picker plus Theme default in Appearance;
+  - wallpaper themes use the picked colour for the status-bar tint as well;
+  - `accentOn` is derived from the colour's luminance for readable icons.
+- Theme picker previews now render a miniature screen with Compose shapes: top bar, two list
+  rows and a green call dot, including a gradient for wallpaper themes.
+- Swipe reveal fixes:
+  - the reveal layer uses `matchParentSize`, so the coloured panel fills the row height instead
+    of collapsing to the icon's height;
+  - the revealed panel itself is clipped with rounded corners, so its inner edge no longer has a
+    hard cutoff at full swipe;
+  - label appears from 48 dp.
+- Dialpad recent list collapses the keypad when it starts scrolling and turns the centre call
+  button into SHOW DIALPAD. Tapping it restores the keys and preserves the list position.
+- Removed the 1,000-row cap in `loadCalls` and added a "Show calls from" range
+  (All / 1 / 2 / 3 / 6 months / 1 year, default All) in Behaviour → Call history. The app can
+  only display rows the system provider still retains, so an OEM-pruned call log remains a
+  platform limitation.
+- Fixed contact → history navigation: `Route.History(number)` is pushed on top of the detail
+  screen instead of clearing the stack, so Back returns to the detail and then to the list.
+
+### Build/test
+
+- `builds/next-dialer-0.1.0-c5.apk` (versionCode 5, `0.1.0-c5`, 11.57 MB, signed).
+- API 28 emulator verified: fixed-height rows, company "GS" in the right block, right-side
+  type/duration, teal accent changing the status bar and digits, theme previews, collapsed
+  dialpad + SHOW DIALPAD restore, filtered history from a contact and Back returning to the
+  detail, and the new call-range row showing "All calls".
+- Physical device confirmed the company field on a real contact.
+
+### Next
+
+- Remaining appearance work (C6): day/night second theme, text/dialpad refinements, scrim presets.
+- Remaining Behaviour work (C7), then Advanced (C8) and release polish (C9).

@@ -128,9 +128,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             emptyList()
         }
         val calls = if (_callLogGranted.value) {
-            val mergeBy = settingsStore.state.value.mergeBy
+            val state = settingsStore.state.value
             withContext(Dispatchers.IO) {
-                runCatching { repository.loadCalls(contacts, mergeBy) }.getOrDefault(emptyList())
+                runCatching {
+                    repository.loadCalls(contacts, state.mergeBy, state.callLogRangeDays)
+                }.getOrDefault(emptyList())
             }
         } else {
             emptyList()

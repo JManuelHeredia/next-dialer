@@ -16,6 +16,7 @@ data class Contact(
     val numbers: List<ContactNumber>,
     val starred: Boolean,
     val sortKey: String,
+    val organization: String? = null,
 ) {
     val primaryNumber: String? get() = numbers.firstOrNull()?.number
     val initial: String
@@ -48,6 +49,8 @@ data class CallEntry(
     val isNew: Boolean,
     val contactId: Long?,
     val numberLabel: String?,
+    /** Company/organisation from the matched contact, shown on the right of the row. */
+    val organization: String? = null,
     /** Number of call-log rows merged into this row. */
     val count: Int = 1,
     /** Every call-log id behind this row, newest first. Used for deletion. */

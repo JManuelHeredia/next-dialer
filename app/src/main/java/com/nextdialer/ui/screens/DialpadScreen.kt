@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentPaste
@@ -35,6 +36,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +58,7 @@ import com.nextdialer.data.CallEntry
 import com.nextdialer.data.Contact
 import com.nextdialer.data.DialerSettings
 import com.nextdialer.data.SwipeAction
+import com.nextdialer.ui.components.CallRowBody
 import com.nextdialer.ui.components.CallTypeIcon
 import com.nextdialer.ui.components.ContactAvatar
 import com.nextdialer.ui.components.DialpadBottomBar
@@ -114,6 +117,7 @@ fun DialpadScreen(
 
     var number by rememberSaveable { mutableStateOf("") }
     var clipboardNumber by remember { mutableStateOf<String?>(null) }
+    var keypadVisible by rememberSaveable { mutableStateOf(true) }
 
     fun readClipboardNumber(): String? {
         if (!settings.checkClipboard) return null
@@ -309,6 +313,9 @@ fun DialpadScreen(
                 callLogGranted = callLogGranted,
                 onTap = onTapCall,
                 onSwipeAction = onSwipeAction,
+                onScrolled = {
+                    if (number.isEmpty()) keypadVisible = false
+                },
                 modifier = Modifier.weight(1f),
             )
         } else {
@@ -326,6 +333,7 @@ fun DialpadScreen(
             2 -> 1.2f
             else -> 1f
         }).dp
+        val showKeypad = keypadVisible || number.isNotEmpty()
 
         Column(
             modifier = Modifier
@@ -336,43 +344,45 @@ fun DialpadScreen(
                 )
                 .padding(top = 10.dp),
         ) {
-            Column(modifier = Modifier.padding(horizontal = 18.dp)) {
-                dialKeys.chunked(3).forEach { row ->
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        row.forEach { key ->
-                            DialKeyButton(
-                                key = key,
-                                theme = theme,
-                                height = keyHeight,
-                                settings = settings,
-                                digitScale = digitScale,
-                                modifier = Modifier.weight(1f),
-                                onClick = { append(key.digit) },
-                                onLongClick = {
-                                    when (key.digit) {
-                                        "0" -> {
-                                            if (number.isEmpty()) {
-                                                number = "+"
-                                            } else {
-                                                number += "+"
+            if (showKeypad) {
+                Column(modifier = Modifier.padding(horizontal = 18.dp)) {
+                    dialKeys.chunked(3).forEach { row ->
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            row.forEach { key ->
+                                DialKeyButton(
+                                    key = key,
+                                    theme = theme,
+                                    height = keyHeight,
+                                    settings = settings,
+                                    digitScale = digitScale,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { append(key.digit) },
+                                    onLongClick = {
+                                        when (key.digit) {
+                                            "0" -> {
+                                                if (number.isEmpty()) {
+                                                    number = "+"
+                                                } else {
+                                                    number += "+"
+                                                }
+                                                feedback("0")
                                             }
-                                            feedback("0")
-                                        }
-                                        in "2".."9" -> {
-                                            val target = settings.speedDial[key.digit.toInt()]
-                                            if (target.isNullOrBlank()) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "No speed dial for ${key.digit}",
-                                                    Toast.LENGTH_SHORT,
-                                                ).show()
-                                            } else {
-                                                onPlaceCall(target)
+                                            in "2".."9" -> {
+                                                val target = settings.speedDial[key.digit.toInt()]
+                                                if (target.isNullOrBlank()) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "No speed dial for ${key.digit}",
+                                                        Toast.LENGTH_SHORT,
+                                                    ).show()
+                                                } else {
+                                                    onPlaceCall(target)
+                                                }
                                             }
                                         }
-                                    }
-                                },
-                            )
+                                    },
+                                )
+                            }
                         }
                     }
                 }
@@ -384,15 +394,18 @@ fun DialpadScreen(
                 canDelete = number.isNotEmpty(),
                 pasteAvailable = settings.checkClipboard && clipboardNumber != null,
                 missedCount = missedCount,
+                dialpadVisible = showKeypad,
                 onPaste = {
                     val pasted = readClipboardNumber() ?: clipboardNumber
                     if (pasted != null) {
                         number = PhoneUtils.digits(pasted)
                         clipboardNumber = pasted
+                        keypadVisible = true
                     }
                 },
                 onContacts = onOpenContacts,
                 onCallHistory = onOpenRecents,
+                onShowDialpad = { keypadVisible = true },
                 onCall = { if (number.isNotEmpty()) callTyped() },
                 onBackspace = { removeLast() },
                 onClear = { number = "" },
@@ -569,6 +582,7 @@ private fun RecentCallList(
     callLogGranted: Boolean,
     onTap: (CallEntry) -> Unit,
     onSwipeAction: (SwipeAction, CallEntry) -> Unit,
+    onScrolled: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (!callLogGranted || calls.isEmpty()) {
@@ -587,6 +601,10 @@ private fun RecentCallList(
     }
 
     val context = LocalContext.current
+    val listState = rememberLazyListState()
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (listState.isScrollInProgress) onScrolled()
+    }
     Column(modifier = modifier.fillMaxWidth()) {
         // Fixed legend: it must stay visible while the call list scrolls.
         Text(
@@ -598,15 +616,13 @@ private fun RecentCallList(
             modifier = Modifier.padding(start = 22.dp, top = 6.dp, bottom = 4.dp),
         )
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
         ) {
             items(calls.take(14), key = { it.id }) { call ->
-            val name = call.displayName
-                ?: Formatters.formatPhone(context, call.number, settings.formatNumber)
-            val color = callKindColor(call.kind, theme, settings.colorCalls)
             SwipeActionRow(
                 leftAction = if (settings.swipeEnabled) settings.swipeLeftDialer else SwipeAction.NONE,
                 rightAction = if (settings.swipeEnabled) settings.swipeRightDialer else SwipeAction.NONE,
@@ -617,55 +633,16 @@ private fun RecentCallList(
                     .padding(vertical = 1.dp)
                     .clip(RoundedCornerShape(16.dp)),
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            theme.surface.copy(
-                                alpha = if (theme.useWallpaper) 0.62f else 1f,
-                            ),
-                        )
-                        .clickable { onTap(call) }
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    ContactAvatar(
-                        name = name,
-                        photoUri = call.photoUri,
-                        size = 36.dp,
-                        theme = theme,
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            text = name,
-                            color = if (call.kind == com.nextdialer.data.CallKind.MISSED) {
-                                theme.missedRed
-                            } else {
-                                theme.textPrimary
-                            },
-                            fontSize = 14.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            CallTypeIcon(kind = call.kind, color = color)
-                            Spacer(Modifier.width(4.dp))
-                            Text(
-                                text = Formatters.callTimeLabel(
-                                    context,
-                                    call.date,
-                                    settings.relativeTime,
-                                    settings.displayTime,
-                                ),
-                                color = theme.textSecondary,
-                                fontSize = 11.5.sp,
-                                maxLines = 1,
-                            )
-                        }
-                    }
-                }
+                CallRowBody(
+                    call = call,
+                    settings = settings,
+                    theme = theme,
+                    onClick = { onTap(call) },
+                    avatarSize = 36.dp,
+                    horizontalPadding = 10.dp,
+                    verticalPadding = 5.dp,
+                    rowHeight = 68.dp,
+                )
             }
         }
     }

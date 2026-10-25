@@ -57,9 +57,12 @@ fun DialpadBottomBar(
     canDelete: Boolean,
     pasteAvailable: Boolean,
     missedCount: Int,
+    /** False when the keypad is collapsed so the centre slot becomes a SHOW DIALPAD action. */
+    dialpadVisible: Boolean,
     onPaste: () -> Unit,
     onContacts: () -> Unit,
     onCallHistory: () -> Unit,
+    onShowDialpad: () -> Unit,
     onCall: () -> Unit,
     onBackspace: () -> Unit,
     onClear: () -> Unit,
@@ -103,21 +106,37 @@ fun DialpadBottomBar(
         }
 
         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            Box(
-                modifier = Modifier
-                    .size(58.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (canCall) theme.callGreen else theme.callGreen.copy(alpha = 0.45f),
+            if (dialpadVisible) {
+                Box(
+                    modifier = Modifier
+                        .size(58.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (canCall) theme.callGreen else theme.callGreen.copy(alpha = 0.45f),
+                        )
+                        .clickable(enabled = canCall, onClick = onCall),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Call,
+                        contentDescription = "Call",
+                        tint = Color.White,
+                        modifier = Modifier.size(27.dp),
                     )
-                    .clickable(enabled = canCall, onClick = onCall),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Call,
-                    contentDescription = "Call",
-                    tint = Color.White,
-                    modifier = Modifier.size(27.dp),
+                }
+            } else {
+                Text(
+                    text = "SHOW DIALPAD",
+                    color = theme.accent,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .clickable(onClick = onShowDialpad)
+                        .padding(horizontal = 3.dp, vertical = 10.dp),
                 )
             }
         }

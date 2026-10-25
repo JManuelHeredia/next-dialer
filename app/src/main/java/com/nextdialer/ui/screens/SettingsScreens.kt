@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,7 +36,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -132,6 +135,7 @@ fun AppearanceScreen(
     var showTextSize by remember { mutableStateOf(false) }
     var showDialpadSize by remember { mutableStateOf(false) }
     var showDialpadTextSize by remember { mutableStateOf(false) }
+    var showAccent by remember { mutableStateOf(false) }
 
     val currentTheme = DialerThemes.byId(settings.themeId)
 
@@ -144,6 +148,15 @@ fun AppearanceScreen(
                 theme = theme,
                 subtitle = currentTheme.description,
                 onClick = onTheme,
+            )
+        }
+        item {
+            SettingsValueRow(
+                title = "Accent colour",
+                value = accentLabel(settings.accentColor),
+                theme = theme,
+                subtitle = "Overrides the theme blue for the status bar, digits and highlights",
+                onClick = { showAccent = true },
             )
         }
         item {
@@ -352,6 +365,18 @@ fun AppearanceScreen(
             onDismiss = { showDialpadTextSize = false },
         )
     }
+    if (showAccent) {
+        AccentColorDialog(
+            selected = settings.accentColor,
+            defaultColor = currentTheme.accent,
+            theme = theme,
+            onSelect = {
+                store.setAccentColor(it)
+                showAccent = false
+            },
+            onDismiss = { showAccent = false },
+        )
+    }
 }
 
 @Composable
@@ -366,6 +391,7 @@ fun BehaviourScreen(
     var tapDialog by remember { mutableStateOf<TapTarget?>(null) }
     var showStrength by remember { mutableStateOf(false) }
     var showMerge by remember { mutableStateOf(false) }
+    var showRange by remember { mutableStateOf(false) }
 
     val speedDialCount = settings.speedDial.size
 
@@ -425,6 +451,15 @@ fun BehaviourScreen(
                 theme = theme,
                 subtitle = "Show repeated calls as one row",
                 onClick = { showMerge = true },
+            )
+        }
+        item {
+            SettingsValueRow(
+                title = "Show calls from",
+                value = callLogRangeLabel(settings.callLogRangeDays),
+                theme = theme,
+                subtitle = "Limit how far back the call log is loaded",
+                onClick = { showRange = true },
             )
         }
         item {
@@ -649,6 +684,21 @@ fun BehaviourScreen(
             onDismiss = { showMerge = false },
         )
     }
+
+    if (showRange) {
+        ChoiceDialog(
+            title = "Show calls from",
+            options = listOf(0, 30, 60, 90, 180, 365),
+            selected = settings.callLogRangeDays,
+            label = ::callLogRangeLabel,
+            theme = theme,
+            onSelect = {
+                store.setCallLogRangeDays(it)
+                showRange = false
+            },
+            onDismiss = { showRange = false },
+        )
+    }
 }
 
 @Composable
@@ -843,7 +893,7 @@ fun ThemePickerScreen(
                         .padding(horizontal = 22.dp, vertical = 11.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    ThemeSwatch(option)
+                    ThemePreview(option)
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
                         Text(
@@ -882,34 +932,198 @@ fun ThemePickerScreen(
 }
 
 @Composable
-private fun ThemeSwatch(option: com.nextdialer.ui.theme.DialerTheme) {
+private fun ThemePreview(option: com.nextdialer.ui.theme.DialerTheme) {
+    val backgroundModifier = if (option.useWallpaper) {
+        Modifier.background(
+            Brush.linearGradient(
+                listOf(Color(0xFF203A43), Color(0xFF6D4C41), Color(0xFF2C5364)),
+            ),
+        )
+    } else {
+        Modifier.background(option.background)
+    }
+
     Box(
         modifier = Modifier
-            .size(48.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(option.background)
-            .border(1.dp, option.divider, RoundedCornerShape(14.dp)),
-        contentAlignment = Alignment.Center,
+            .size(width = 72.dp, height = 56.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .then(backgroundModifier)
+            .border(1.dp, option.divider, RoundedCornerShape(12.dp)),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Box(
-                modifier = Modifier
-                    .size(13.dp)
-                    .background(option.topBar, CircleShape),
-            )
-            Box(
-                modifier = Modifier
-                    .size(13.dp)
-                    .background(option.accent, CircleShape),
-            )
-            Box(
-                modifier = Modifier
-                    .size(13.dp)
-                    .background(option.callGreen, CircleShape),
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .background(option.topBar),
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 12.dp, start = 5.dp, end = 5.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            repeat(2) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(15.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(option.surface),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 3.dp)
+                            .size(7.dp)
+                            .background(option.accent, CircleShape),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.72f)
+                                .height(2.dp)
+                                .background(option.textPrimary.copy(alpha = 0.7f)),
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.46f)
+                                .height(2.dp)
+                                .background(option.textSecondary.copy(alpha = 0.6f)),
+                        )
+                    }
+                }
+            }
         }
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(5.dp)
+                .size(10.dp)
+                .background(option.callGreen, CircleShape),
+        )
     }
 }
+
+@Composable
+private fun AccentColorDialog(
+    selected: Int,
+    defaultColor: Color,
+    theme: DialerTheme,
+    onSelect: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = theme.surfaceStrong,
+        titleContentColor = theme.textPrimary,
+        textContentColor = theme.textSecondary,
+        title = { Text("Accent colour") },
+        text = {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onSelect(0) }
+                        .padding(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(defaultColor)
+                            .border(1.dp, theme.divider, CircleShape),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = "Theme default",
+                        color = theme.textPrimary,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (selected == 0) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Selected",
+                            tint = theme.accent,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                AccentChoices.chunked(6).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        row.forEach { argb ->
+                            val color = Color(argb)
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .border(
+                                        width = if (selected == argb) 2.dp else 1.dp,
+                                        color = if (selected == argb) {
+                                            theme.textPrimary
+                                        } else {
+                                            theme.divider
+                                        },
+                                        shape = CircleShape,
+                                    )
+                                    .clickable { onSelect(argb) },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                if (selected == argb) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Check,
+                                        contentDescription = "Selected",
+                                        tint = if (color.luminance() > 0.55f) {
+                                            Color.Black
+                                        } else {
+                                            Color.White
+                                        },
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Done", color = theme.accent)
+            }
+        },
+    )
+}
+
+private val AccentChoices = listOf(
+    0xFF33B8FF.toInt(),
+    0xFF26C6DA.toInt(),
+    0xFF26A69A.toInt(),
+    0xFF43A047.toInt(),
+    0xFF7CB342.toInt(),
+    0xFFFFB300.toInt(),
+    0xFFFB8C00.toInt(),
+    0xFFF4511E.toInt(),
+    0xFFE53935.toInt(),
+    0xFFEC407A.toInt(),
+    0xFF8E24AA.toInt(),
+    0xFF5C6BC0.toInt(),
+)
+
+private fun accentLabel(argb: Int): String =
+    if (argb == 0) "Theme default" else "#%06X".format(argb and 0xFFFFFF)
 
 @Composable
 fun SpeedDialScreen(
@@ -1191,6 +1405,15 @@ private fun mergeLabel(value: Int): String = when (value) {
     0 -> "None"
     1 -> "Person"
     else -> "Phone number"
+}
+
+private fun callLogRangeLabel(days: Int): String = when (days) {
+    30 -> "1 month"
+    60 -> "2 months"
+    90 -> "3 months"
+    180 -> "6 months"
+    365 -> "1 year"
+    else -> "All calls"
 }
 
 private fun SwipeAction.label(): String = when (this) {

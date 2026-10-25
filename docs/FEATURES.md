@@ -78,6 +78,12 @@ same defaults where the feature is kept.
 | — | — | **New** | **Delete call** — long-press a Recents row to delete the whole merged group (needs `WRITE_CALL_LOG`). |
 | — | — | **New** | **Clear call history** in Advanced, with confirmation (needs `WRITE_CALL_LOG`). |
 | — | — | **New** | **Delete call history for this number** as a swipe action; confirms, then removes every call-log row matching the number (uses `ContentResolver.delete` and `WRITE_CALL_LOG`). |
+| — | — | **New** | **Accent colour** override in Appearance: 12 swatches plus theme default. Recolours the Crystal status bar and accent components. |
+| — | — | **New** | **Show calls from** range (All / 1 / 2 / 3 / 6 months / 1 year). Default All; the 1,000-row limit was removed. |
+| — | — | **New** | **Collapsible dialpad** while scrolling the recent list; the call button becomes SHOW DIALPAD. |
+| — | — | **New** | **Call row layout** mirrors exDialer: name or number, number line, type icon/date, and last-call type/duration. Contact company appears on the right. |
+| — | — | **New** | **History navigation** from a contact pushes onto the back stack instead of clearing it. |
+| — | — | **New** | **Theme previews** are minimal Compose layouts rather than colour dots. |
 | — | — | **New** | **Per-number detail screen** with Call / Message / Add-or-Edit / Share, all stored numbers, installed WhatsApp/Telegram chat links, call total, and a fixed CALL / SMS / overflow bar. |
 | — | — | **New** | Fixed "RECENT CALLS" legend above the dialpad's recent list (does not scroll away). |
 | — | — | **New** | Symmetric five-slot dialpad bar: paste · contacts · call · backspace · overflow, with horizontal and bottom padding. |

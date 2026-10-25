@@ -7,6 +7,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 
 data class DialerTheme(
     val id: String,
@@ -144,6 +145,21 @@ object DialerThemes {
     val all: List<DialerTheme> = listOf(Crystal, CrystalSimp, Lollipop, Simplism, Classic)
 
     fun byId(id: String): DialerTheme = all.firstOrNull { it.id == id } ?: Crystal
+}
+
+/**
+ * Applies the user's accent override. Wallpaper themes also use it for the status-bar tint, so
+ * Crystal's default blue can be replaced with any picked colour; other themes keep their own
+ * top-bar treatment to preserve light/dark icon contrast.
+ */
+fun DialerTheme.withAccentOverride(argb: Int): DialerTheme {
+    if (argb == 0) return this
+    val color = Color(argb)
+    return copy(
+        accent = color,
+        accentOn = if (color.luminance() > 0.55f) Color(0xFF06141F) else Color.White,
+        topBar = if (useWallpaper) color else topBar,
+    )
 }
 
 val LocalTextScale = staticCompositionLocalOf { 1f }

@@ -5,6 +5,7 @@ import android.content.Context
 import android.provider.CallLog
 import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Email
+import android.provider.ContactsContract.CommonDataKinds.Organization
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import com.nextdialer.util.PhoneUtils
 
@@ -14,6 +15,7 @@ class DeviceRepository(context: Context) {
     private val resources = context.applicationContext.resources
 
     fun loadContacts(): List<Contact> {
+        val organizations = loadOrganizations()
         val projection = arrayOf(
             Phone.CONTACT_ID,
             Phone.LOOKUP_KEY,
@@ -66,6 +68,7 @@ class DeviceRepository(context: Context) {
                                 ?: cursor.getString(photoIndex),
                             starred = cursor.getInt(starredIndex) == 1,
                             sortKey = cursor.getString(sortIndex) ?: "",
+                            organization = organizations[cursor.getLong(idIndex)],
                         )
                     }
                     builder.add(
@@ -84,7 +87,7 @@ class DeviceRepository(context: Context) {
         return builders.values.map { it.build() }
     }
 
-    fun loadCalls(contacts: List<Contact>, mergeBy: Int = 2): List<CallEntry> {
+    fun loadCalls(contacts: List<Contact>, mergeBy: Int = 2, rangeDays: Int = 0): List<CallEntry> {
         val byNumber = HashMap<String, Contact>()
         val byTail = HashMap<String, Contact>()
         for (contact in contacts) {
@@ -117,13 +120,25 @@ class DeviceRepository(context: Context) {
             CallLog.Calls.CACHED_PHOTO_URI,
         )
         val result = ArrayList<CallEntry>()
+        val selection = if (rangeDays > 0) {
+            "${CallLog.Calls.DATE} >= ?"
+        } else {
+            null
+        }
+        val selectionArgs = if (rangeDays > 0) {
+            arrayOf(
+                (System.currentTimeMillis() - rangeDays * 24L * 60L * 60L * 1000L).toString(),
+            )
+        } else {
+            null
+        }
 
         runCatching {
             resolver.query(
                 CallLog.Calls.CONTENT_URI,
                 projection,
-                null,
-                null,
+                selection,
+                selectionArgs,
                 "${CallLog.Calls.DATE} DESC",
             )?.use { cursor ->
                 val idIndex = cursor.getColumnIndexOrThrow(CallLog.Calls._ID)
@@ -137,7 +152,7 @@ class DeviceRepository(context: Context) {
                 val newIndex = cursor.getColumnIndexOrThrow(CallLog.Calls.NEW)
                 val photoIndex = cursor.getColumnIndexOrThrow(CallLog.Calls.CACHED_PHOTO_URI)
 
-                while (cursor.moveToNext() && result.size < 1000) {
+                while (cursor.moveToNext()) {
                     val number = cursor.getString(numberIndex) ?: ""
                     val contact = match(number)
                     val cachedType = cursor.getInt(typeIndex)
@@ -165,6 +180,7 @@ class DeviceRepository(context: Context) {
                             isNew = cursor.getInt(newIndex) == 1,
                             contactId = contact?.id,
                             numberLabel = label,
+                            organization = contact?.organization,
                         ),
                     )
                 }
@@ -272,6 +288,7 @@ class DeviceRepository(context: Context) {
                         numbers = loadNumbers(contactId),
                         starred = cursor.getInt(starredIndex) == 1,
                         sortKey = cursor.getString(sortIndex) ?: "",
+                        organization = loadOrganization(contactId),
                     )
                 }
             }
@@ -287,6 +304,51 @@ class DeviceRepository(context: Context) {
             ),
             emails = emails,
         )
+    }
+
+    private fun loadOrganizations(): Map<Long, String> {
+        val projection = arrayOf(Organization.CONTACT_ID, Organization.COMPANY)
+        val companies = HashMap<Long, String>()
+        runCatching {
+            resolver.query(
+                ContactsContract.Data.CONTENT_URI,
+                projection,
+                "${ContactsContract.Data.MIMETYPE} = ?",
+                arrayOf(Organization.CONTENT_ITEM_TYPE),
+                null,
+            )?.use { cursor ->
+                val idIndex = cursor.getColumnIndexOrThrow(Organization.CONTACT_ID)
+                val companyIndex = cursor.getColumnIndexOrThrow(Organization.COMPANY)
+                while (cursor.moveToNext()) {
+                    val company = cursor.getString(companyIndex)
+                        ?.takeIf { it.isNotBlank() }
+                        ?: continue
+                    companies.putIfAbsent(cursor.getLong(idIndex), company)
+                }
+            }
+        }
+        return companies
+    }
+
+    private fun loadOrganization(contactId: Long): String? {
+        val projection = arrayOf(Organization.COMPANY)
+        var company: String? = null
+        runCatching {
+            resolver.query(
+                ContactsContract.Data.CONTENT_URI,
+                projection,
+                "${Organization.CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?",
+                arrayOf(contactId.toString(), Organization.CONTENT_ITEM_TYPE),
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    company = cursor.getString(
+                        cursor.getColumnIndexOrThrow(Organization.COMPANY),
+                    )?.takeIf { it.isNotBlank() }
+                }
+            }
+        }
+        return company
     }
 
     private fun loadNumbers(contactId: Long): List<ContactNumber> {
@@ -371,6 +433,7 @@ class DeviceRepository(context: Context) {
         val photoUri: String?,
         val starred: Boolean,
         val sortKey: String,
+        val organization: String?,
     ) {
         private val numbers = LinkedHashMap<String, ContactNumber>()
 
@@ -387,6 +450,7 @@ class DeviceRepository(context: Context) {
             numbers = numbers.values.toList(),
             starred = starred,
             sortKey = sortKey,
+            organization = organization,
         )
     }
 }

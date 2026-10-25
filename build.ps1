@@ -28,7 +28,7 @@ if (-not (Test-Path $apk)) {
     Write-Error "Release APK not found at $apk"
 }
 
-$version = "0.1.0-c4"
+$version = "0.1.0-c5"
 $destDir = Join-Path $root "builds"
 New-Item -ItemType Directory -Force $destDir | Out-Null
 $dest = Join-Path $destDir "next-dialer-$version.apk"

@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 data class DialerSettings(
     val onboardingDone: Boolean = false,
     val themeId: String = "crystal",
+    /** ARGB override for the theme accent. 0 keeps the theme's built-in colour. */
+    val accentColor: Int = 0,
     val wallpaperDim: Int = 55,
     val wallpaperBlur: Int = 14,
     val displayPhoto: Boolean = true,
@@ -47,6 +49,8 @@ data class DialerSettings(
     val rememberTab: Boolean = true,
     val reverseCallLog: Boolean = false,
     val mergeBy: Int = 2,
+    /** 0 = show every call the provider returns; otherwise a rolling day window. */
+    val callLogRangeDays: Int = 0,
     val lastSeenCallId: Long = 0,
     val shortNumberSpeedDial: Boolean = true,
     val lastTab: String = "KEYPAD",
@@ -83,6 +87,7 @@ class SettingsStore(context: Context) {
         return DialerSettings(
             onboardingDone = prefs.getBoolean("onboarding_done", false),
             themeId = prefs.getString("theme_id", "crystal") ?: "crystal",
+            accentColor = prefs.getInt("accent_color", 0),
             wallpaperDim = prefs.getInt("wallpaper_dim", 55),
             wallpaperBlur = prefs.getInt("wallpaper_blur", 14),
             displayPhoto = prefs.getBoolean("display_photo", true),
@@ -121,6 +126,7 @@ class SettingsStore(context: Context) {
             rememberTab = prefs.getBoolean("remember_tab", true),
             reverseCallLog = prefs.getBoolean("reverse_call_log", false),
             mergeBy = prefs.getInt("merge_by", 2),
+            callLogRangeDays = prefs.getInt("call_log_range_days", 0),
             lastSeenCallId = prefs.getLong("last_seen_call_id", 0L),
             shortNumberSpeedDial = prefs.getBoolean("short_number_speed_dial", true),
             lastTab = prefs.getString("last_tab", "KEYPAD") ?: "KEYPAD",
@@ -140,6 +146,7 @@ class SettingsStore(context: Context) {
     }
 
     fun setTheme(id: String) = edit { putString("theme_id", id) }
+    fun setAccentColor(argb: Int) = edit { putInt("accent_color", argb) }
     fun setOnboardingDone(value: Boolean) = edit { putBoolean("onboarding_done", value) }
     fun setWallpaperDim(value: Int) = edit { putInt("wallpaper_dim", value.coerceIn(0, 85)) }
     fun setWallpaperBlur(value: Int) = edit { putInt("wallpaper_blur", value.coerceIn(0, 30)) }
@@ -181,6 +188,7 @@ class SettingsStore(context: Context) {
     fun setRememberTab(value: Boolean) = edit { putBoolean("remember_tab", value) }
     fun setReverseCallLog(value: Boolean) = edit { putBoolean("reverse_call_log", value) }
     fun setMergeBy(value: Int) = edit { putInt("merge_by", value.coerceIn(0, 2)) }
+    fun setCallLogRangeDays(value: Int) = edit { putInt("call_log_range_days", value) }
     fun setLastSeenCallId(value: Long) = edit { putLong("last_seen_call_id", value) }
     fun setShortNumberSpeedDial(value: Boolean) = edit { putBoolean("short_number_speed_dial", value) }
     fun setLastTab(value: String) = edit { putString("last_tab", value) }

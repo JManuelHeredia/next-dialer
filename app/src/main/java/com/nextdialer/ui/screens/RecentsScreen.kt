@@ -45,6 +45,7 @@ import com.nextdialer.data.CallKind
 import com.nextdialer.data.DialerSettings
 import com.nextdialer.data.SwipeAction
 import com.nextdialer.data.TapAction
+import com.nextdialer.ui.components.CallRowBody
 import com.nextdialer.ui.components.CallTypeIcon
 import com.nextdialer.ui.components.ContactAvatar
 import com.nextdialer.ui.components.DayHeader
@@ -248,22 +249,6 @@ private fun CallRow(
     onLongClick: () -> Unit,
     onAction: (SwipeAction) -> Unit,
 ) {
-    val context = LocalContext.current
-    val scale = LocalTextScale.current
-    val color = callKindColor(call.kind, theme, settings.colorCalls)
-    val displayName = call.displayName
-        ?: Formatters.formatPhone(context, call.number, settings.formatNumber)
-
-    val parts = buildList {
-        call.numberLabel?.takeIf { it.isNotBlank() }?.let(::add)
-        if (call.kind == CallKind.MISSED) add("Missed")
-        if (settings.countMergedCalls && call.count > 1) {
-            add("${call.count} calls")
-        }
-        Formatters.formatDuration(call.duration).takeIf { it.isNotEmpty() }?.let(::add)
-        add(Formatters.callTimeLabel(context, call.date, settings.relativeTime, settings.displayTime))
-    }
-
     SwipeActionRow(
         leftAction = if (settings.swipeEnabled) settings.swipeLeftDialer else SwipeAction.NONE,
         rightAction = if (settings.swipeEnabled) settings.swipeRightDialer else SwipeAction.NONE,
@@ -274,61 +259,15 @@ private fun CallRow(
             .padding(horizontal = 12.dp, vertical = 3.dp)
             .clip(RoundedCornerShape(18.dp)),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    theme.surface.copy(alpha = if (theme.useWallpaper) 0.62f else 1f),
-                )
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (settings.displayPhoto) {
-                ContactAvatar(
-                    name = displayName,
-                    photoUri = call.photoUri,
-                    size = 46.dp,
-                    theme = theme,
-                )
-            } else {
-                Box(modifier = Modifier.size(46.dp), contentAlignment = Alignment.Center) {
-                    CallTypeIcon(kind = call.kind, color = color)
-                }
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = displayName,
-                    color = if (call.kind == CallKind.MISSED) theme.missedRed else theme.textPrimary,
-                    fontSize = (16f * scale).sp,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    CallTypeIcon(kind = call.kind, color = color)
-                    Spacer(Modifier.width(5.dp))
-                    Text(
-                        text = parts.joinToString(" · "),
-                        color = color,
-                        fontSize = (12.5f * scale).sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            IconButton(
-                onClick = { onAction(SwipeAction.CALL) },
-                modifier = Modifier.size(40.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Phone,
-                    contentDescription = "Call $displayName",
-                    tint = theme.accent,
-                    modifier = Modifier.size(21.dp),
-                )
-            }
-        }
+        CallRowBody(
+            call = call,
+            settings = settings,
+            theme = theme,
+            onClick = onClick,
+            onLongClick = onLongClick,
+            avatarSize = 46.dp,
+            horizontalPadding = 12.dp,
+            verticalPadding = 10.dp,
+        )
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Delete
@@ -33,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -99,30 +101,42 @@ fun SwipeActionRow(
     Box(modifier = modifier.fillMaxWidth()) {
         val revealedLeft = (-offset).coerceAtLeast(0f)
         val revealedRight = offset.coerceAtLeast(0f)
-        val labelThreshold = with(density) { 58.dp.toPx() }
+        val labelThreshold = with(density) { 48.dp.toPx() }
 
         if (leftAction != SwipeAction.NONE && revealedLeft > 0f) {
-            SwipeReveal(
-                action = leftAction,
-                theme = theme,
-                showLabel = revealedLeft >= labelThreshold,
+            Box(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .width(with(density) { revealedLeft.toDp() })
-                    .fillMaxHeight(),
-            )
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(18.dp)),
+            ) {
+                SwipeReveal(
+                    action = leftAction,
+                    theme = theme,
+                    showLabel = revealedLeft >= labelThreshold,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .width(with(density) { revealedLeft.toDp() })
+                        .fillMaxHeight(),
+                )
+            }
         }
 
         if (rightAction != SwipeAction.NONE && revealedRight > 0f) {
-            SwipeReveal(
-                action = rightAction,
-                theme = theme,
-                showLabel = revealedRight >= labelThreshold,
+            Box(
                 modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .width(with(density) { revealedRight.toDp() })
-                    .fillMaxHeight(),
-            )
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(18.dp)),
+            ) {
+                SwipeReveal(
+                    action = rightAction,
+                    theme = theme,
+                    showLabel = revealedRight >= labelThreshold,
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .width(with(density) { revealedRight.toDp() })
+                        .fillMaxHeight(),
+                )
+            }
         }
 
         Box(
@@ -194,6 +208,7 @@ private fun SwipeReveal(
 ) {
     Column(
         modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
             .background(action.color(theme))
             .padding(horizontal = 4.dp),
         verticalArrangement = Arrangement.Center,
