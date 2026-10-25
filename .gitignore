@@ -1,0 +1,34 @@
+# Android / Gradle build output
+.gradle/
+build/
+app/build/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Local machine configuration
+local.properties
+.idea/
+*.iml
+captures/
+.cxx/
+
+# Signing material (kept locally, never committed)
+*.keystore
+*.jks
+*.p12
+work/
+
+# Large local tooling and reverse-engineering artefacts
+tools/
+RE/
+builds/
+
+# Logs and temporary files
+*.log
+*.hprof
+*.tmp
+assets/bg.jpg
+.DS_Store
+Thumbs.db

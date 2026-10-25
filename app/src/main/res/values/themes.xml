@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.NextDialer" parent="android:style/Theme.Material.NoActionBar">
+        <!-- The wallpaper is composited by the window manager behind a genuinely translucent
+             window. This keeps it fixed while lists scroll and lets cross-window blur work. -->
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowBackground">@color/launch_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>
