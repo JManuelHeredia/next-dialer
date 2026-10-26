@@ -364,8 +364,11 @@
 
 ### RC2 follow-up
 
-- Unified the dialpad keys panel and bottom bar on the previous Recents nav-bar style; the
-  opacity slider now applies to that single container, removing the brown/black split.
+- Unified the dialpad keys panel and bottom bar on one clear translucent surface with no divider;
+  the opacity slider now applies to that single container, removing the brown/black split and the
+  line that appeared when the keypad was collapsed.
+- Made the long-press menu a compact, grouped context panel with the contact number under the
+  title and no oversized blank space/Cancel row.
 - Made the long-press menu dynamic:
   - registered contact → View contact, Edit contact, Add/Remove favorite, Delete contact;
   - unknown number → Add contact;
@@ -373,8 +376,8 @@
   - Added `WRITE_CONTACTS` to the manifest and permission request for favorite/edit/delete.
 - Removed the Crystal status-bar tint for wallpaper themes: the Android status bar now stays
   transparent over the wallpaper (the black top readability shade remains).
-- Rebuilt RC2 (`6A21F245…` SHA-256) and verified the unified panel, transparent status bar and
-  dynamic menu on the emulator.
+- Rebuilt RC2 (`CB21549F…` SHA-256) and verified the clear unified panel, transparent status bar
+  and compact dynamic menu on the emulator.
 
 ### Next
 

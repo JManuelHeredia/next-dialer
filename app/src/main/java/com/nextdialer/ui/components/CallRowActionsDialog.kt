@@ -8,14 +8,20 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.ContactsContract
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.ContentCopy
@@ -29,6 +35,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,6 +53,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import com.nextdialer.data.CallEntry
 import com.nextdialer.data.DialerSettings
@@ -54,8 +63,8 @@ import com.nextdialer.util.DialerIntents
 import com.nextdialer.util.Formatters
 
 /**
- * Dynamic long-press menu for a call row. Registered contacts get view/edit/favourite/delete
- * actions; unknown numbers get Add contact. The number can always be copied or shared.
+ * Compact long-press context menu for a call row. Registered contacts get view/edit/favourite/
+ * delete actions; unknown numbers get Add contact. The number can always be copied or shared.
  */
 @Composable
 fun CallRowActionsDialog(
@@ -73,6 +82,7 @@ fun CallRowActionsDialog(
     val isContact = contactId != null
     val name = call.displayName
         ?: Formatters.formatPhone(context, call.number, settings.formatNumber)
+    val number = Formatters.formatPhone(context, call.number, settings.formatNumber)
     val starred by produceState(initialValue = false, contactId) {
         value = contactId?.let { isStarred(context, it) } ?: false
     }
@@ -83,22 +93,44 @@ fun CallRowActionsDialog(
         action()
     }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        containerColor = theme.surfaceStrong,
-        titleContentColor = theme.textPrimary,
-        textContentColor = theme.textSecondary,
-        title = {
-            Text(
-                text = name,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        text = {
-            Column {
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(
+            modifier = Modifier
+                .widthIn(max = 320.dp)
+                .fillMaxWidth(0.9f),
+            shape = RoundedCornerShape(22.dp),
+            color = theme.surfaceStrong,
+            tonalElevation = 0.dp,
+        ) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 560.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = 10.dp),
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+                    Text(
+                        text = name,
+                        color = theme.textPrimary,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (number.isNotBlank() && number != name) {
+                        Text(
+                            text = number,
+                            color = theme.textSecondary,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+                MenuDivider(theme)
                 RowAction(
                     icon = Icons.Filled.Call,
                     label = "Call",
@@ -111,6 +143,7 @@ fun CallRowActionsDialog(
                     theme = theme,
                     onClick = { run(onSms) },
                 )
+                MenuDivider(theme)
                 if (isContact) {
                     RowAction(
                         icon = Icons.Filled.Person,
@@ -151,6 +184,7 @@ fun CallRowActionsDialog(
                         },
                     )
                 }
+                MenuDivider(theme)
                 RowAction(
                     icon = Icons.Filled.ContentCopy,
                     label = "Copy number",
@@ -174,8 +208,10 @@ fun CallRowActionsDialog(
                         run { DialerIntents.shareContact(context, name, call.number) }
                     },
                 )
+                if (onDelete != null || isContact) {
+                    MenuDivider(theme)
+                }
                 if (onDelete != null) {
-                    HorizontalDivider(color = theme.divider)
                     RowAction(
                         icon = Icons.Filled.Delete,
                         label = "Delete call history",
@@ -194,13 +230,8 @@ fun CallRowActionsDialog(
                     )
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = theme.textSecondary)
-            }
-        },
-    )
+        }
+    }
 
     if (confirmDeleteContact && contactId != null) {
         AlertDialog(
@@ -229,6 +260,15 @@ fun CallRowActionsDialog(
             },
         )
     }
+}
+
+@Composable
+private fun MenuDivider(theme: DialerTheme) {
+    HorizontalDivider(
+        color = theme.divider,
+        thickness = 0.6.dp,
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+    )
 }
 
 private fun hasWriteContacts(context: Context): Boolean =
@@ -303,20 +343,20 @@ private fun RowAction(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 6.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(19.dp),
+            modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(14.dp))
         Text(
             text = label,
             color = if (label.startsWith("Delete")) theme.missedRed else theme.textPrimary,
-            fontSize = 15.sp,
+            fontSize = 14.5.sp,
         )
     }
 }

@@ -182,7 +182,7 @@ which is deferred.
     contacts, Add contact for unknown numbers, plus Copy number and Share.
   - Contact-source checklist (All / Phone / SIM / accounts).
   - Dialpad width, height, left/centre/right position and background opacity; the keys and bar
-    share the previous Recents nav-bar background style; wider call and SHOW DIALPAD slots.
+    share one clear translucent surface with no divider line; wider call and SHOW DIALPAD slots.
   - Accent picker: whitesmoke, almost black, auto and custom hex; accent no longer changes the
     status bar, and the Crystal status bar stays transparent.
   - Contact-history rows disable tap and swipe to prevent recursive navigation.

@@ -78,7 +78,6 @@ fun DialpadBottomBar(
         modifier = modifier
             .fillMaxWidth(),
     ) {
-        HorizontalDivider(color = theme.divider, thickness = 0.6.dp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()

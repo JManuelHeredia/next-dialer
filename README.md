@@ -106,9 +106,9 @@ NEXT Dialer.
   each synced account, with contact counts. Filters Contacts, T9 search and name matching.
 - **Dialpad sizing**: width (50–100 %), height (60–120 %), left/centre/right position, and a
   background-opacity slider. Key grid sizing is independent of the full-width bottom bar.
-- **Unified dialpad/list container**: the keys and bottom bar now use the same previous
-  Recents nav-bar background; the call/SHOW DIALPAD slots are wider and SHOW DIALPAD has an icon
-  and larger text.
+- **Unified dialpad container**: the keys and bottom bar share one clear translucent surface
+  style with no divider line, matching the earlier look; the call/SHOW DIALPAD slots are wider
+  and SHOW DIALPAD has an icon and larger text.
 - **Accent picker**: standard, light and dark palettes plus Whitesmoke and Almost black, an
   Auto (background) mode, and a custom RRGGBB picker. The accent no longer recolours the status
   bar, and the Crystal status bar stays transparent over the wallpaper.
