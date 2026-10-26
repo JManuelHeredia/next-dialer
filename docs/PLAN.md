@@ -162,7 +162,7 @@ which is deferred.
 - Call history opened from a contact is pushed on the back stack, so Back returns to the contact
   detail rather than exiting the app.
 
-### C6 — Interaction polish and RC1 (complete)
+### C6 — Interaction polish, RC1 and RC2 (complete)
 
 - Dialpad search results use the configured swipe actions.
 - Keypad hide/show uses expand/shrink + fade animations.
@@ -175,6 +175,16 @@ which is deferred.
   the merge setting, with a fixed N CALLS TOTAL header; Back returns to the detail.
 - Outgoing calls with no duration show “Not answered”.
 - RC1 release: `next-dialer-0.2.0-rc1.apk`.
+- RC2 refinements:
+  - Recents defaults to unmerged rows so the whole call log is visible; the 14-row dialpad
+    recent cap is removed as well.
+  - Long-press call actions (Call / SMS / View / Share / Delete).
+  - Contact-source checklist (All / Phone / SIM / accounts).
+  - Dialpad width, height, left/centre/right position and background opacity; bottom bar shares
+    the Contacts/Recents style; wider call and SHOW DIALPAD slots.
+  - Accent picker: whitesmoke, almost black, auto and custom hex; accent no longer changes the
+    status bar.
+  - Contact-history rows disable tap and swipe to prevent recursive navigation.
 
 ### C7 — Appearance completion
 

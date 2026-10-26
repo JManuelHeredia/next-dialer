@@ -28,6 +28,14 @@ data class ContactDetail(
     val emails: List<String>,
 )
 
+/** One selectable contacts source: local phone storage, a SIM, or a synced account. */
+data class ContactSource(
+    val key: String,
+    val label: String,
+    val subtitle: String,
+    val contactCount: Int,
+)
+
 enum class CallKind {
     INCOMING,
     OUTGOING,

@@ -64,6 +64,7 @@ import com.nextdialer.data.CallEntry
 import com.nextdialer.data.Contact
 import com.nextdialer.data.DialerSettings
 import com.nextdialer.data.SwipeAction
+import com.nextdialer.ui.components.CallRowActionsDialog
 import com.nextdialer.ui.components.CallRowBody
 import com.nextdialer.ui.components.CallTypeIcon
 import com.nextdialer.ui.components.ContactAvatar
@@ -126,6 +127,7 @@ fun DialpadScreen(
     var number by rememberSaveable { mutableStateOf("") }
     var clipboardNumber by remember { mutableStateOf<String?>(null) }
     var keypadVisible by rememberSaveable { mutableStateOf(true) }
+    var actionCall by remember { mutableStateOf<CallEntry?>(null) }
 
     fun readClipboardNumber(): String? {
         if (!settings.checkClipboard) return null
@@ -321,6 +323,7 @@ fun DialpadScreen(
                 callLogGranted = callLogGranted,
                 onTap = onTapCall,
                 onSwipeAction = onSwipeAction,
+                onLongClick = { actionCall = it },
                 onScrolled = {
                     if (number.isEmpty()) keypadVisible = false
                 },
@@ -337,19 +340,23 @@ fun DialpadScreen(
             )
         }
 
-        val keyHeight = (56 * when (settings.dialpadSize) {
-            1 -> 1.1f
-            2 -> 1.2f
-            else -> 1f
-        }).dp
+        val keyHeight = (56f * (settings.dialpadHeight.coerceIn(60, 120) / 100f)).dp
         val showKeypad = keypadVisible || number.isNotEmpty()
+        val panelAlpha = if (theme.useWallpaper) 0.78f else 1f
+        val keysAlign = when (settings.dialpadPosition) {
+            1 -> Alignment.CenterStart
+            2 -> Alignment.CenterEnd
+            else -> Alignment.Center
+        }
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(
-                    theme.surface.copy(alpha = if (theme.useWallpaper) 0.78f else 1f),
+                    theme.surface.copy(
+                        alpha = panelAlpha * (settings.dialpadOpacity.coerceIn(0, 100) / 100f),
+                    ),
                 )
                 .padding(top = 10.dp),
         ) {
@@ -358,43 +365,50 @@ fun DialpadScreen(
                 enter = expandVertically(animationSpec = tween(200)) + fadeIn(tween(160)),
                 exit = shrinkVertically(animationSpec = tween(170)) + fadeOut(tween(120)),
             ) {
-                Column(modifier = Modifier.padding(horizontal = 18.dp)) {
-                    dialKeys.chunked(3).forEach { row ->
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            row.forEach { key ->
-                                DialKeyButton(
-                                    key = key,
-                                    theme = theme,
-                                    height = keyHeight,
-                                    settings = settings,
-                                    digitScale = digitScale,
-                                    modifier = Modifier.weight(1f),
-                                    onClick = { append(key.digit) },
-                                    onLongClick = {
-                                        when (key.digit) {
-                                            "0" -> {
-                                                if (number.isEmpty()) {
-                                                    number = "+"
-                                                } else {
-                                                    number += "+"
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .align(keysAlign)
+                            .fillMaxWidth(settings.dialpadWidth.coerceIn(50, 100) / 100f)
+                            .padding(horizontal = 18.dp),
+                    ) {
+                        dialKeys.chunked(3).forEach { row ->
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                row.forEach { key ->
+                                    DialKeyButton(
+                                        key = key,
+                                        theme = theme,
+                                        height = keyHeight,
+                                        settings = settings,
+                                        digitScale = digitScale,
+                                        modifier = Modifier.weight(1f),
+                                        onClick = { append(key.digit) },
+                                        onLongClick = {
+                                            when (key.digit) {
+                                                "0" -> {
+                                                    if (number.isEmpty()) {
+                                                        number = "+"
+                                                    } else {
+                                                        number += "+"
+                                                    }
+                                                    feedback("0")
                                                 }
-                                                feedback("0")
-                                            }
-                                            in "2".."9" -> {
-                                                val target = settings.speedDial[key.digit.toInt()]
-                                                if (target.isNullOrBlank()) {
-                                                    Toast.makeText(
-                                                        context,
-                                                        "No speed dial for ${key.digit}",
-                                                        Toast.LENGTH_SHORT,
-                                                    ).show()
-                                                } else {
-                                                    onPlaceCall(target)
+                                                in "2".."9" -> {
+                                                    val target = settings.speedDial[key.digit.toInt()]
+                                                    if (target.isNullOrBlank()) {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "No speed dial for ${key.digit}",
+                                                            Toast.LENGTH_SHORT,
+                                                        ).show()
+                                                    } else {
+                                                        onPlaceCall(target)
+                                                    }
                                                 }
                                             }
-                                        }
-                                    },
-                                )
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
@@ -431,6 +445,19 @@ fun DialpadScreen(
                 onSettings = onOpenSettings,
             )
         }
+    }
+
+    actionCall?.let { call ->
+        CallRowActionsDialog(
+            call = call,
+            settings = settings,
+            theme = theme,
+            onDismiss = { actionCall = null },
+            onCall = { onSwipeAction(SwipeAction.CALL, call) },
+            onSms = { onSwipeAction(SwipeAction.SMS, call) },
+            onView = { onSwipeAction(SwipeAction.VIEW, call) },
+            onDelete = null,
+        )
     }
 }
 
@@ -615,6 +642,7 @@ private fun RecentCallList(
     callLogGranted: Boolean,
     onTap: (CallEntry) -> Unit,
     onSwipeAction: (SwipeAction, CallEntry) -> Unit,
+    onLongClick: (CallEntry) -> Unit,
     onScrolled: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -655,7 +683,7 @@ private fun RecentCallList(
                 .fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
         ) {
-            items(calls.take(14), key = { it.id }) { call ->
+            items(calls, key = { it.id }) { call ->
             SwipeActionRow(
                 leftAction = if (settings.swipeEnabled) settings.swipeLeftDialer else SwipeAction.NONE,
                 rightAction = if (settings.swipeEnabled) settings.swipeRightDialer else SwipeAction.NONE,
@@ -671,6 +699,7 @@ private fun RecentCallList(
                     settings = settings,
                     theme = theme,
                     onClick = { onTap(call) },
+                    onLongClick = { onLongClick(call) },
                     avatarSize = 36.dp,
                     horizontalPadding = 10.dp,
                     verticalPadding = 5.dp,

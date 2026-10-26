@@ -7,6 +7,7 @@ import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Email
 import android.provider.ContactsContract.CommonDataKinds.Organization
 import android.provider.ContactsContract.CommonDataKinds.Phone
+import android.provider.ContactsContract.RawContacts
 import com.nextdialer.util.PhoneUtils
 
 class DeviceRepository(context: Context) {
@@ -14,7 +15,98 @@ class DeviceRepository(context: Context) {
     private val resolver: ContentResolver = context.applicationContext.contentResolver
     private val resources = context.applicationContext.resources
 
-    fun loadContacts(): List<Contact> {
+    fun loadContactSources(): List<ContactSource> {
+        val projection = arrayOf(
+            RawContacts.CONTACT_ID,
+            RawContacts.ACCOUNT_NAME,
+            RawContacts.ACCOUNT_TYPE,
+        )
+        val idsByKey = LinkedHashMap<String, MutableSet<Long>>()
+        val info = HashMap<String, ContactSource>()
+        runCatching {
+            resolver.query(
+                RawContacts.CONTENT_URI,
+                projection,
+                "${RawContacts.DELETED} = 0",
+                null,
+                null,
+            )?.use { cursor ->
+                val idIndex = cursor.getColumnIndexOrThrow(RawContacts.CONTACT_ID)
+                val nameIndex = cursor.getColumnIndexOrThrow(RawContacts.ACCOUNT_NAME)
+                val typeIndex = cursor.getColumnIndexOrThrow(RawContacts.ACCOUNT_TYPE)
+                while (cursor.moveToNext()) {
+                    val contactId = cursor.getLong(idIndex)
+                    if (contactId <= 0L) continue
+                    val name = cursor.getString(nameIndex)
+                    val type = cursor.getString(typeIndex)
+                    val key = sourceKey(type, name)
+                    idsByKey.getOrPut(key) { LinkedHashSet() }.add(contactId)
+                    if (key !in info) {
+                        val (label, subtitle) = sourceInfo(type, name)
+                        info[key] = ContactSource(key, label, subtitle, 0)
+                    }
+                }
+            }
+        }
+        return idsByKey.map { (key, ids) ->
+            info.getValue(key).copy(contactCount = ids.size)
+        }.sortedWith(
+            compareBy<ContactSource>(
+                { when (it.key) { "phone" -> 0; "sim" -> 1; else -> 2 } },
+                { it.label.lowercase() },
+            ),
+        )
+    }
+
+    private fun allowedContactIds(sources: Set<String>): Set<Long> {
+        val allowed = HashSet<Long>()
+        val projection = arrayOf(
+            RawContacts.CONTACT_ID,
+            RawContacts.ACCOUNT_NAME,
+            RawContacts.ACCOUNT_TYPE,
+        )
+        runCatching {
+            resolver.query(
+                RawContacts.CONTENT_URI,
+                projection,
+                "${RawContacts.DELETED} = 0",
+                null,
+                null,
+            )?.use { cursor ->
+                val idIndex = cursor.getColumnIndexOrThrow(RawContacts.CONTACT_ID)
+                val nameIndex = cursor.getColumnIndexOrThrow(RawContacts.ACCOUNT_NAME)
+                val typeIndex = cursor.getColumnIndexOrThrow(RawContacts.ACCOUNT_TYPE)
+                while (cursor.moveToNext()) {
+                    val contactId = cursor.getLong(idIndex)
+                    val key = sourceKey(
+                        cursor.getString(typeIndex),
+                        cursor.getString(nameIndex),
+                    )
+                    if (key in sources) allowed.add(contactId)
+                }
+            }
+        }
+        return allowed
+    }
+
+    private fun sourceKey(type: String?, name: String?): String = when {
+        type.isNullOrBlank() -> "phone"
+        type.contains("sim", ignoreCase = true) -> "sim"
+        else -> "account:$type|${name.orEmpty()}"
+    }
+
+    private fun sourceInfo(type: String?, name: String?): Pair<String, String> = when {
+        type.isNullOrBlank() -> "Phone" to "Device storage"
+        type.contains("sim", ignoreCase = true) -> "SIM" to (name ?: "SIM card")
+        else -> (name?.takeIf { it.isNotBlank() } ?: "Account") to (type ?: "Account")
+    }
+
+    fun loadContacts(enabledSources: Set<String> = setOf("*")): List<Contact> {
+        val allowedIds = when {
+            enabledSources.contains("*") -> null
+            enabledSources.contains(NONE_SOURCE) -> return emptyList()
+            else -> allowedContactIds(enabledSources)
+        }
         val organizations = loadOrganizations()
         val projection = arrayOf(
             Phone.CONTACT_ID,
@@ -53,6 +145,7 @@ class DeviceRepository(context: Context) {
 
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idIndex)
+                    if (allowedIds != null && id !in allowedIds) continue
                     val number = cursor.getString(numberIndex) ?: continue
                     val normalized = cursor.getString(normalizedIndex)
                         ?: PhoneUtils.normalize(number)
@@ -452,5 +545,9 @@ class DeviceRepository(context: Context) {
             sortKey = sortKey,
             organization = organization,
         )
+    }
+
+    companion object {
+        const val NONE_SOURCE = "__none__"
     }
 }

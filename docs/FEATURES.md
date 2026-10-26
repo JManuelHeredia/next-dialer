@@ -74,11 +74,17 @@ same defaults where the feature is kept.
 | Open Stock Dialer | `open_stock_dialer` = true | **Dropped** | NEXT Dialer handles `tel:` intents itself. |
 | Switch to Call Log | `switch_to_call_log` = false | **Later** | Contact detail → Recents transition in C4. |
 | Remember Tab (Contacts) | `remember_tab` = true | **Partial** | Remembers the last bottom-navigation tab across launches. The original remembered the contacts sub-tab; this app currently has no contacts sub-tabs. |
-| — | — | **New** | **Merge calls by** (None / Person / Phone number), default Phone number. Mirrors the original `merge_by` semantics. |
+| — | — | **New** | **Merge calls by** (None / Person / Phone number), default None so Recents lists every call. Mirrors the original `merge_by` semantics. |
 | — | — | **New** | **Delete call** — long-press a Recents row to delete the whole merged group (needs `WRITE_CALL_LOG`). |
 | — | — | **New** | **Clear call history** in Advanced, with confirmation (needs `WRITE_CALL_LOG`). |
 | — | — | **New** | **Delete call history for this number** as a swipe action; confirms, then removes every call-log row matching the number (uses `ContentResolver.delete` and `WRITE_CALL_LOG`). |
 | — | — | **New** | **Dialpad search results** use the configured swipe actions, matching contacts behaviour. |
+| — | — | **New** | **Recents shows every call by default** (Merge calls by = None); the merge setting remains available. |
+| — | — | **New** | **Long-press call actions** (Call / Send SMS / View contact / Share / Delete history) on call rows. |
+| — | — | **New** | **Contacts to show** checklist: All sources, Phone, SIM and each synced account, with contact counts. |
+| — | — | **New** | **Dialpad sizing**: width, height, left/centre/right position, and background opacity. |
+| — | — | **New** | **Accent auto + custom**: whitesmoke, almost black, Auto (background) and RRGGBB entry. Accent no longer tints the status bar. |
+| — | — | **New** | **Contact history rows** disable tap and swipe to prevent recursive navigation. |
 | — | — | **New** | **Animated keypad** collapse/expand when scrolling the recent list; SHOW DIALPAD restores it. |
 | — | — | **New** | **Swipe threshold/spacing**: 16 dp dead zone before the reveal starts, 4 dp gap to the row, actions fire only at full reveal. |
 | — | — | **New** | **Accent light/dark palettes** added to the standard swatches and theme default. |

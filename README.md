@@ -6,13 +6,12 @@ app with contacts, call history, swipe actions, dimmed wallpaper, and optional b
 NEXT Dialer is a clean-room Kotlin / Jetpack Compose app. It does **not** require the old
 `com.modoohut.dialer.donate` key package and contains no Google Play licensing code.
 
-> Status: **Release candidate RC1 (C6)**. The signed APK is built and verified on the API 28
-> emulator, with the company field confirmed on a physical phone. RC1 adds swipeable dialpad
-> search results, animated keypad collapse/expand, full-swipe action thresholds with spacing,
-> light/dark accent swatches, adjustable list-row opacity, and a complete contact history that
-> lists every individual call across all of the contact's numbers.
-> See [docs/PLAN.md](docs/PLAN.md) for the roadmap and [docs/DEVLOG.md](docs/DEVLOG.md) for the
-> latest test/build notes.
+> Status: **Release candidate RC2**. The signed APK is built and verified on the API 28 emulator.
+> RC2 adds the complete (unmerged) Recents list, long-press call actions, contact-source
+> checkboxes, dialpad width/height/position and background controls, unified bottom-bar styling,
+> custom/auto accent colours (including whitesmoke and near-black), and disables row actions in
+> the contact history view. See [docs/PLAN.md](docs/PLAN.md) for the roadmap and
+> [docs/DEVLOG.md](docs/DEVLOG.md) for the latest test/build notes.
 
 ## Screenshots
 
@@ -75,6 +74,16 @@ The Classic (opaque) theme for comparison:
 | --- | --- | --- |
 | ![Contact history](docs/screenshots/c6-contact-history.png) | ![Search swipe](docs/screenshots/c6-search-swipe.png) | ![Row opacity](docs/screenshots/c6-row-opacity.png) |
 
+### Release candidate RC2
+
+| Complete Recents | Long-press actions | Contact sources |
+| --- | --- | --- |
+| ![Recents](docs/screenshots/c7-recents-all.png) | ![Long press](docs/screenshots/c7-long-press.png) | ![Contact sources](docs/screenshots/c7-contact-sources.png) |
+
+| Unified dialpad bar |
+| --- |
+| ![Dialpad bar](docs/screenshots/c7-dialpad-bar.png) |
+
 ## Why two apps?
 
 | App | Package | Purpose |
@@ -86,7 +95,27 @@ The legacy build is at `builds/legacy/exDialer-198-unlocked.apk`. It is the orig
 the Pro/key check neutralised; it still uses the original package name so it can coexist with
 NEXT Dialer.
 
-## Features in RC1
+## Features in RC2
+
+- **Recents now lists every call by default** (Merge calls by = None), matching the complete
+  contact history. The merge setting remains available.
+- **Long-press call actions**: Call, Send SMS, View contact, Share, and Delete history in Recents;
+  the dialpad recent list shares the same menu without Delete.
+- **Contact sources checklist** under Behaviour → Contacts to show: All sources, Phone, SIM and
+  each synced account, with contact counts. Filters Contacts, T9 search and name matching.
+- **Dialpad sizing**: width (50–100 %), height (60–120 %), left/centre/right position, and a
+  background-opacity slider. Key grid sizing is independent of the full-width bottom bar.
+- **Unified bottom bars**: the dialpad bar now uses the same nav-bar background and divider as
+  the Contacts/Recents bar; the call/dial slots are wider, and SHOW DIALPAD has an icon and
+  larger text.
+- **Accent picker**: standard, light and dark palettes plus Whitesmoke and Almost black, an
+  Auto (background) mode, and a custom RRGGBB picker. The accent no longer recolours the status
+  bar; the Crystal blue/transparent treatment stays intact.
+- **Contact history rows**: tap and swipe are disabled to prevent recursive navigation; long
+  press still offers explicit actions.
+- **List row background opacity** applies to call rows, contact rows and search results.
+
+### Previous RC1 features
 
 - Dialpad with DTMF tones, haptics, long-press `0` for `+`, long-press backspace to clear.
 - Five-slot dialpad bar (paste · contacts · call · backspace · overflow) with balanced padding.
@@ -161,7 +190,7 @@ development key; replace it for any public distribution.
 ## Install and test
 
 ```powershell
-adb install -r builds\next-dialer-0.2.0-rc1.apk
+adb install -r builds\next-dialer-0.2.0-rc2.apk
 adb shell pm grant com.nextdialer android.permission.READ_CONTACTS
 adb shell pm grant com.nextdialer android.permission.READ_CALL_LOG
 adb shell pm grant com.nextdialer android.permission.WRITE_CALL_LOG

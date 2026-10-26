@@ -15,8 +15,8 @@ android {
         applicationId = "com.nextdialer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.2.0-rc1"
+        versionCode = 7
+        versionName = "0.2.0-rc2"
 
         vectorDrawables {
             useSupportLibrary = true

@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -48,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nextdialer.data.Contact
+import com.nextdialer.data.ContactSource
 import com.nextdialer.data.DialerSettings
 import com.nextdialer.data.SettingsStore
 import com.nextdialer.data.SwipeAction
@@ -136,8 +139,8 @@ fun AppearanceScreen(
     onTheme: () -> Unit,
 ) {
     var showTextSize by remember { mutableStateOf(false) }
-    var showDialpadSize by remember { mutableStateOf(false) }
     var showDialpadTextSize by remember { mutableStateOf(false) }
+    var showDialpadPosition by remember { mutableStateOf(false) }
     var showAccent by remember { mutableStateOf(false) }
 
     val currentTheme = DialerThemes.byId(settings.themeId)
@@ -302,11 +305,45 @@ fun AppearanceScreen(
 
         item { SettingsSection("Dialpad", theme) }
         item {
-            SettingsValueRow(
-                title = "Dialpad size",
-                value = sizeLabel(settings.dialpadSize),
+            SettingsSliderRow(
+                title = "Dialpad width",
+                valueLabel = "${settings.dialpadWidth}%",
+                value = settings.dialpadWidth.toFloat(),
+                valueRange = 50f..100f,
+                steps = 9,
                 theme = theme,
-                onClick = { showDialpadSize = true },
+                onValueChange = { store.setDialpadWidth(it.toInt()) },
+            )
+        }
+        item {
+            SettingsSliderRow(
+                title = "Dialpad height",
+                valueLabel = "${settings.dialpadHeight}%",
+                value = settings.dialpadHeight.toFloat(),
+                valueRange = 60f..120f,
+                steps = 11,
+                theme = theme,
+                onValueChange = { store.setDialpadHeight(it.toInt()) },
+            )
+        }
+        item {
+            SettingsValueRow(
+                title = "Dialpad position",
+                value = dialpadPositionLabel(settings.dialpadPosition),
+                theme = theme,
+                subtitle = "Move the key grid left, centre or right",
+                onClick = { showDialpadPosition = true },
+            )
+        }
+        item {
+            SettingsSliderRow(
+                title = "Dialpad background",
+                valueLabel = "${settings.dialpadOpacity}%",
+                value = settings.dialpadOpacity.toFloat(),
+                valueRange = 0f..100f,
+                steps = 9,
+                theme = theme,
+                onValueChange = { store.setDialpadOpacity(it.toInt()) },
             )
         }
         item {
@@ -359,18 +396,18 @@ fun AppearanceScreen(
             onDismiss = { showTextSize = false },
         )
     }
-    if (showDialpadSize) {
+    if (showDialpadPosition) {
         ChoiceDialog(
-            title = "Dialpad size",
+            title = "Dialpad position",
             options = listOf(0, 1, 2),
-            selected = settings.dialpadSize,
-            label = ::sizeLabel,
+            selected = settings.dialpadPosition,
+            label = ::dialpadPositionLabel,
             theme = theme,
             onSelect = {
-                store.setDialpadSize(it)
-                showDialpadSize = false
+                store.setDialpadPosition(it)
+                showDialpadPosition = false
             },
-            onDismiss = { showDialpadSize = false },
+            onDismiss = { showDialpadPosition = false },
         )
     }
     if (showDialpadTextSize) {
@@ -408,6 +445,7 @@ fun BehaviourScreen(
     theme: DialerTheme,
     onBack: () -> Unit,
     onSpeedDial: () -> Unit,
+    onContactSources: () -> Unit,
 ) {
     var swipeDialog by remember { mutableStateOf<SwipeTarget?>(null) }
     var tapDialog by remember { mutableStateOf<TapTarget?>(null) }
@@ -435,6 +473,15 @@ fun BehaviourScreen(
                 checked = settings.allowExternalViewer,
                 onCheckedChange = store::setAllowExternalViewer,
                 theme = theme,
+            )
+        }
+        item {
+            SettingsValueRow(
+                title = "Contacts to show",
+                value = contactSourcesLabel(settings.contactSources),
+                theme = theme,
+                subtitle = "Phone, SIM and synced accounts",
+                onClick = onContactSources,
             )
         }
         item {
@@ -892,6 +939,133 @@ fun AdvancedScreen(
 }
 
 @Composable
+fun ContactSourcesScreen(
+    settings: DialerSettings,
+    store: SettingsStore,
+    theme: DialerTheme,
+    sources: List<ContactSource>,
+    onBack: () -> Unit,
+) {
+    val allKeys = remember(sources) { sources.map { it.key }.toSet() }
+
+    fun isEnabled(key: String): Boolean =
+        settings.contactSources.contains("*") ||
+            (settings.contactSources.contains(key) &&
+                !settings.contactSources.contains("__none__"))
+
+    fun toggle(key: String, enabled: Boolean) {
+        val current = when {
+            settings.contactSources.contains("*") -> allKeys
+            settings.contactSources.contains("__none__") -> emptySet()
+            else -> settings.contactSources
+        }
+        val next = if (enabled) current + key else current - key
+        val stored = when {
+            next.isEmpty() -> setOf("__none__")
+            next.containsAll(allKeys) -> setOf("*")
+            else -> next
+        }
+        store.setContactSources(stored)
+    }
+
+    SettingsPage(title = "Contacts to show", theme = theme, onBack = onBack) {
+        item {
+            SettingsNote(
+                text = "Choose which address books appear in Contacts, dialpad search and " +
+                    "call-log name matching. Unselected sources stay untouched on the device.",
+                theme = theme,
+            )
+        }
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        store.setContactSources(
+                            if (settings.contactSources.contains("*")) {
+                                setOf("__none__")
+                            } else {
+                                setOf("*")
+                            },
+                        )
+                    }
+                    .padding(horizontal = 22.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = "All sources",
+                        color = theme.textPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Text(
+                        text = "Include every phone, SIM and account",
+                        color = theme.textSecondary,
+                        fontSize = 12.sp,
+                    )
+                }
+                Checkbox(
+                    checked = settings.contactSources.contains("*"),
+                    onCheckedChange = { checked ->
+                        store.setContactSources(if (checked) setOf("*") else setOf("__none__"))
+                    },
+                    colors = accentCheckboxColors(theme),
+                )
+            }
+        }
+        if (sources.isEmpty()) {
+            item {
+                Text(
+                    text = "No contact sources found.",
+                    color = theme.textSecondary,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(horizontal = 22.dp, vertical = 10.dp),
+                )
+            }
+        }
+        sources.forEach { source ->
+            item(key = source.key) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { toggle(source.key, !isEnabled(source.key)) }
+                        .padding(horizontal = 22.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = source.label,
+                            color = theme.textPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        Text(
+                            text = "${source.subtitle} · ${source.contactCount} contacts",
+                            color = theme.textSecondary,
+                            fontSize = 12.sp,
+                        )
+                    }
+                    Checkbox(
+                        checked = isEnabled(source.key),
+                        onCheckedChange = { toggle(source.key, it) },
+                        colors = accentCheckboxColors(theme),
+                    )
+                }
+            }
+            item { SettingsDivider(theme) }
+        }
+    }
+}
+
+@Composable
+private fun accentCheckboxColors(theme: DialerTheme) = CheckboxDefaults.colors(
+    checkedColor = theme.accent,
+    uncheckedColor = theme.textSecondary,
+    checkmarkColor = theme.accentOn,
+)
+
+@Composable
 fun ThemePickerScreen(
     current: String,
     theme: DialerTheme,
@@ -1038,6 +1212,15 @@ private fun AccentColorDialog(
     onSelect: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    var custom by remember(selected) {
+        mutableStateOf(
+            if (selected > 0) {
+                String.format("%06X", selected and 0xFFFFFF)
+            } else {
+                ""
+            },
+        )
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = theme.surfaceStrong,
@@ -1050,6 +1233,37 @@ private fun AccentColorDialog(
                     .heightIn(max = 440.dp)
                     .verticalScroll(rememberScrollState()),
             ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onSelect(-1) }
+                        .padding(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(if (theme.dark) Color(0xFFF5F5F5) else Color(0xFF121212))
+                            .border(1.dp, theme.divider, CircleShape),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = "Auto (background)",
+                        color = theme.textPrimary,
+                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (selected == -1) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Selected",
+                            tint = theme.accent,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1154,6 +1368,46 @@ private fun AccentColorDialog(
                     }
                     Spacer(Modifier.height(8.dp))
                 }
+                Text(
+                    text = "Custom",
+                    color = theme.textSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.sp,
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = custom,
+                        onValueChange = { custom = it.take(7) },
+                        singleLine = true,
+                        placeholder = { Text("RRGGBB") },
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = theme.textPrimary,
+                            unfocusedTextColor = theme.textPrimary,
+                            focusedBorderColor = theme.accent,
+                            unfocusedBorderColor = theme.divider,
+                            focusedLabelColor = theme.accent,
+                            unfocusedLabelColor = theme.textSecondary,
+                            cursorColor = theme.accent,
+                        ),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    TextButton(
+                        onClick = {
+                            val rgb = custom.trim().removePrefix("#").toIntOrNull(16)
+                            if (rgb != null) {
+                                onSelect(0xFF000000.toInt() or rgb)
+                            }
+                        },
+                    ) {
+                        Text("Apply", color = theme.accent)
+                    }
+                }
             }
         },
         confirmButton = {
@@ -1212,6 +1466,7 @@ private val AccentChoices = listOf(
 )
 
 private val AccentLightChoices = listOf(
+    0xFFF5F5F5.toInt(),
     0xFFB3E5FC.toInt(),
     0xFFB2DFDB.toInt(),
     0xFFC8E6C9.toInt(),
@@ -1221,6 +1476,7 @@ private val AccentLightChoices = listOf(
 )
 
 private val AccentDarkChoices = listOf(
+    0xFF121212.toInt(),
     0xFF0D47A1.toInt(),
     0xFF00695C.toInt(),
     0xFF1B5E20.toInt(),
@@ -1229,8 +1485,11 @@ private val AccentDarkChoices = listOf(
     0xFF4A148C.toInt(),
 )
 
-private fun accentLabel(argb: Int): String =
-    if (argb == 0) "Theme default" else "#%06X".format(argb and 0xFFFFFF)
+private fun accentLabel(argb: Int): String = when {
+    argb == -1 -> "Auto"
+    argb == 0 -> "Theme default"
+    else -> "#%06X".format(argb and 0xFFFFFF)
+}
 
 @Composable
 fun SpeedDialScreen(
@@ -1521,6 +1780,18 @@ private fun callLogRangeLabel(days: Int): String = when (days) {
     180 -> "6 months"
     365 -> "1 year"
     else -> "All calls"
+}
+
+private fun dialpadPositionLabel(position: Int): String = when (position) {
+    1 -> "Left"
+    2 -> "Right"
+    else -> "Centered"
+}
+
+private fun contactSourcesLabel(sources: Set<String>): String = when {
+    sources.contains("*") -> "All sources"
+    sources.contains("__none__") -> "None"
+    else -> "${sources.size} selected"
 }
 
 private fun SwipeAction.label(): String = when (this) {

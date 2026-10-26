@@ -15,5 +15,6 @@ sealed interface Route {
     data object Advanced : Route
     data object ThemePicker : Route
     data object SpeedDial : Route
+    data object ContactSources : Route
     data object About : Route
 }

@@ -24,6 +24,12 @@ data class DialerSettings(
     val formatNumber: Boolean = true,
     val tintSystemBars: Boolean = true,
     val dialpadSize: Int = 0,
+    val dialpadWidth: Int = 100,
+    val dialpadHeight: Int = 100,
+    /** 0 = centred, 1 = left, 2 = right. */
+    val dialpadPosition: Int = 0,
+    /** Percent of the keypad panel's theme opacity; 100 = current. */
+    val dialpadOpacity: Int = 100,
     val dialpadTextSize: Int = 0,
     val displayAbc: Boolean = true,
     val abcAtRight: Boolean = true,
@@ -50,9 +56,10 @@ data class DialerSettings(
     val switchToCallLog: Boolean = false,
     val rememberTab: Boolean = true,
     val reverseCallLog: Boolean = false,
-    val mergeBy: Int = 2,
+    val mergeBy: Int = 0,
     /** 0 = show every call the provider returns; otherwise a rolling day window. */
     val callLogRangeDays: Int = 0,
+    val contactSources: Set<String> = setOf("*"),
     val lastSeenCallId: Long = 0,
     val shortNumberSpeedDial: Boolean = true,
     val lastTab: String = "KEYPAD",
@@ -102,6 +109,10 @@ class SettingsStore(context: Context) {
             formatNumber = prefs.getBoolean("format_number", true),
             tintSystemBars = prefs.getBoolean("tint_system_bars", true),
             dialpadSize = prefs.getInt("dialpad_size", 0),
+            dialpadWidth = prefs.getInt("dialpad_width", 100),
+            dialpadHeight = prefs.getInt("dialpad_height", 100),
+            dialpadPosition = prefs.getInt("dialpad_position", 0),
+            dialpadOpacity = prefs.getInt("dialpad_opacity", 100),
             dialpadTextSize = prefs.getInt("dialpad_text_size", 0),
             displayAbc = prefs.getBoolean("display_abc", true),
             abcAtRight = prefs.getBoolean("abc_at_right", true),
@@ -128,9 +139,12 @@ class SettingsStore(context: Context) {
             switchToCallLog = prefs.getBoolean("switch_to_call_log", false),
             rememberTab = prefs.getBoolean("remember_tab", true),
             reverseCallLog = prefs.getBoolean("reverse_call_log", false),
-            mergeBy = prefs.getInt("merge_by", 2),
+            mergeBy = prefs.getInt("merge_by", 0),
             callLogRangeDays = prefs.getInt("call_log_range_days", 0),
             lastSeenCallId = prefs.getLong("last_seen_call_id", 0L),
+            contactSources = prefs.getStringSet("contact_sources", setOf("*"))
+                ?.toSet()
+                ?: setOf("*"),
             shortNumberSpeedDial = prefs.getBoolean("short_number_speed_dial", true),
             lastTab = prefs.getString("last_tab", "KEYPAD") ?: "KEYPAD",
             speedDial = speedDial,
@@ -164,6 +178,10 @@ class SettingsStore(context: Context) {
     fun setFormatNumber(value: Boolean) = edit { putBoolean("format_number", value) }
     fun setTintSystemBars(value: Boolean) = edit { putBoolean("tint_system_bars", value) }
     fun setDialpadSize(value: Int) = edit { putInt("dialpad_size", value) }
+    fun setDialpadWidth(value: Int) = edit { putInt("dialpad_width", value.coerceIn(50, 100)) }
+    fun setDialpadHeight(value: Int) = edit { putInt("dialpad_height", value.coerceIn(60, 120)) }
+    fun setDialpadPosition(value: Int) = edit { putInt("dialpad_position", value.coerceIn(0, 2)) }
+    fun setDialpadOpacity(value: Int) = edit { putInt("dialpad_opacity", value.coerceIn(0, 100)) }
     fun setDialpadTextSize(value: Int) = edit { putInt("dialpad_text_size", value) }
     fun setDisplayAbc(value: Boolean) = edit { putBoolean("display_abc", value) }
     fun setAbcAtRight(value: Boolean) = edit { putBoolean("abc_at_right", value) }
@@ -193,6 +211,7 @@ class SettingsStore(context: Context) {
     fun setReverseCallLog(value: Boolean) = edit { putBoolean("reverse_call_log", value) }
     fun setMergeBy(value: Int) = edit { putInt("merge_by", value.coerceIn(0, 2)) }
     fun setCallLogRangeDays(value: Int) = edit { putInt("call_log_range_days", value) }
+    fun setContactSources(value: Set<String>) = edit { putStringSet("contact_sources", value) }
     fun setLastSeenCallId(value: Long) = edit { putLong("last_seen_call_id", value) }
     fun setShortNumberSpeedDial(value: Boolean) = edit { putBoolean("short_number_speed_dial", value) }
     fun setLastTab(value: String) = edit { putString("last_tab", value) }

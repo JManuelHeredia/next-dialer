@@ -47,6 +47,7 @@ import com.nextdialer.data.DialerSettings
 import com.nextdialer.data.SwipeAction
 import com.nextdialer.data.TapAction
 import com.nextdialer.ui.components.CallRowBody
+import com.nextdialer.ui.components.CallRowActionsDialog
 import com.nextdialer.ui.components.CallTypeIcon
 import com.nextdialer.ui.components.ContactAvatar
 import com.nextdialer.ui.components.DayHeader
@@ -79,9 +80,11 @@ fun RecentsScreen(
     onOpenContacts: () -> Unit,
     missedCount: Int,
     onSettings: () -> Unit,
+    allowSwipe: Boolean = true,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var pendingDelete by remember { mutableStateOf<CallEntry?>(null) }
+    var actionCall by remember { mutableStateOf<CallEntry?>(null) }
 
     LaunchedEffect(initialQuery) {
         if (initialQuery != null) {
@@ -196,8 +199,9 @@ fun RecentsScreen(
                             settings = settings,
                             theme = theme,
                             onClick = { onTap(call) },
-                            onLongClick = { pendingDelete = call },
+                            onLongClick = { actionCall = call },
                             onAction = { onSwipeAction(it, call) },
+                            allowSwipe = allowSwipe,
                         )
                     }
                 }
@@ -254,6 +258,21 @@ fun RecentsScreen(
             },
         )
     }
+
+    actionCall?.let { call ->
+        CallRowActionsDialog(
+            call = call,
+            settings = settings,
+            theme = theme,
+            onDismiss = { actionCall = null },
+            onCall = { onSwipeAction(SwipeAction.CALL, call) },
+            onSms = { onSwipeAction(SwipeAction.SMS, call) },
+            onView = { onSwipeAction(SwipeAction.VIEW, call) },
+            onDelete = {
+                pendingDelete = call
+            },
+        )
+    }
 }
 
 @Composable
@@ -264,11 +283,13 @@ private fun CallRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onAction: (SwipeAction) -> Unit,
+    allowSwipe: Boolean,
 ) {
+    val swipe = settings.swipeEnabled && allowSwipe
     SwipeActionRow(
-        leftAction = if (settings.swipeEnabled) settings.swipeLeftDialer else SwipeAction.NONE,
-        rightAction = if (settings.swipeEnabled) settings.swipeRightDialer else SwipeAction.NONE,
-        enabled = settings.swipeEnabled,
+        leftAction = if (swipe) settings.swipeLeftDialer else SwipeAction.NONE,
+        rightAction = if (swipe) settings.swipeRightDialer else SwipeAction.NONE,
+        enabled = swipe,
         theme = theme,
         onAction = onAction,
         modifier = Modifier

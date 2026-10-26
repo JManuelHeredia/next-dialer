@@ -154,11 +154,13 @@ object DialerThemes {
  */
 fun DialerTheme.withAccentOverride(argb: Int): DialerTheme {
     if (argb == 0) return this
-    val color = Color(argb)
+    val color = when (argb) {
+        -1 -> if (dark) Color(0xFFF5F5F5) else Color(0xFF121212)
+        else -> Color(argb)
+    }
     return copy(
         accent = color,
         accentOn = if (color.luminance() > 0.55f) Color(0xFF06141F) else Color.White,
-        topBar = if (useWallpaper) color else topBar,
     )
 }
 

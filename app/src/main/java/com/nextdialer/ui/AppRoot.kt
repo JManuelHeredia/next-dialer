@@ -33,6 +33,7 @@ import com.nextdialer.ui.screens.AdvancedScreen
 import com.nextdialer.ui.screens.AppearanceScreen
 import com.nextdialer.ui.screens.BehaviourScreen
 import com.nextdialer.ui.screens.ContactDetailScreen
+import com.nextdialer.ui.screens.ContactSourcesScreen
 import com.nextdialer.ui.screens.ContactsScreen
 import com.nextdialer.ui.screens.DialpadScreen
 import com.nextdialer.ui.screens.PermissionScreen
@@ -66,7 +67,7 @@ fun AppRoot(
         MissedCallNotifier.update(context, missedCount, settings.badgeCount)
     }
 
-    LaunchedEffect(settings.mergeBy, settings.callLogRangeDays) {
+    LaunchedEffect(settings.mergeBy, settings.callLogRangeDays, settings.contactSources) {
         viewModel.reload()
     }
 
@@ -258,6 +259,7 @@ fun AppRoot(
                             "${historyCalls.size} " +
                                 if (historyCalls.size == 1) "CALL TOTAL" else "CALLS TOTAL"
                         },
+                        historyMode = true,
                     )
                 }
 
@@ -285,6 +287,7 @@ fun AppRoot(
                     theme = theme,
                     onBack = ::pop,
                     onSpeedDial = { push(Route.SpeedDial) },
+                    onContactSources = { push(Route.ContactSources) },
                 )
 
                 Route.Advanced -> AdvancedScreen(
@@ -314,6 +317,21 @@ fun AppRoot(
                     onBack = ::pop,
                     contacts = contacts,
                 )
+
+                Route.ContactSources -> {
+                    val sources by produceState(
+                        initialValue = emptyList<com.nextdialer.data.ContactSource>(),
+                    ) {
+                        value = viewModel.contactSources()
+                    }
+                    ContactSourcesScreen(
+                        settings = settings,
+                        store = store,
+                        theme = theme,
+                        sources = sources,
+                        onBack = ::pop,
+                    )
+                }
 
                 Route.About -> AboutScreen(theme = theme, onBack = ::pop)
             }
@@ -398,6 +416,7 @@ private fun MainScaffold(
     requestedQuery: String?,
     onQueryHandled: () -> Unit,
     historySummary: String?,
+    historyMode: Boolean = false,
 ) {
     val initialTab = remember {
         when {
@@ -451,15 +470,18 @@ private fun MainScaffold(
                 onInitialQueryHandled = onQueryHandled,
                 summary = historySummary,
                 onTap = { call ->
-                    onRunTap(
-                        settings.tapDialer,
-                        call.number,
-                        call.contactId,
-                    )
+                    if (!historyMode) {
+                        onRunTap(
+                            settings.tapDialer,
+                            call.number,
+                            call.contactId,
+                        )
+                    }
                 },
                 onSwipeAction = { action, call ->
                     onRunAction(action, call.number, call.contactId)
                 },
+                allowSwipe = !historyMode,
                 onDelete = { call -> onDeleteCalls(call.ids) },
                 onOpenKeypad = { tab = MainTab.KEYPAD },
                 onOpenContacts = { tab = MainTab.CONTACTS },
@@ -529,5 +551,6 @@ private fun routeKey(route: Route): String = when (route) {
     Route.Advanced -> "advanced"
     Route.ThemePicker -> "theme-picker"
     Route.SpeedDial -> "speed-dial"
+    Route.ContactSources -> "contact-sources"
     Route.About -> "about"
 }

@@ -323,3 +323,46 @@
 - Manual RC1 pass on the physical phone, especially the complete 16-call GS history, animated
   keypad, and the new light/dark accent swatches.
 - Then remaining appearance (C7), Behaviour (C8), Advanced (C9), and final release polish.
+
+## 2026-10-25 — C6/RC2: Recents completeness, long press, sources and dialpad controls
+
+### Recents “cap” diagnosis
+
+- The provider was not limiting the list. `loadCalls` no longer had a row cap, but the default
+  `merge_by` was still **Phone number**, so Recents coalesced repeated calls into one row with a
+  count. The contact-history view bypassed merging, which is why it looked complete.
+- Default `merge_by` is now **None**, so Recents lists every individual call. The dialpad recents
+  list also had a separate `take(14)` cap, now removed.
+- The "Merge calls by" and "Show calls from" settings remain for users who want grouping or a
+  shorter window.
+
+### Implementation
+
+- Long-press `CallRowBody` opens a menu with Call, Send SMS, View contact, Share and (in Recents)
+  Delete history. VoIP and edit-before-call were intentionally omitted.
+- Added `ContactSource` + `DeviceRepository.loadContactSources()`, backed by `RawContacts`
+  account type/name. `loadContacts(enabledSources)` filters by the selected contact ids.
+  Behaviour → Contacts to show lists All sources, Phone, SIM and synced accounts with counts.
+- Dialpad layout settings: width 50–100 %, height 60–120 %, position Left/Centered/Right, and
+  background opacity 0–100 %.
+- Bottom bar: wider centre slot (2f vs 1f), 60 dp circular call button, SHOW DIALPAD with a
+  dialpad icon and larger text on both bar variants; dialpad bar now shares the nav-bar
+  background and divider style with the Contacts/Recents bar.
+- Accent picker: whitesmoke and almost-black swatches, an Auto (background) mode, and a custom
+  RRGGBB field. `withAccentOverride` no longer changes the status bar.
+- Contact history route uses `historyMode` to disable row tap and swipe while keeping the
+  long-press menu; the swipe callback remains available to the menu.
+- Contact detail call total is contact-wide; history shows `N CALLS TOTAL` and unmerged rows.
+
+### Build/test
+
+- `builds/next-dialer-0.2.0-rc2.apk` (versionCode 7, `0.2.0-rc2`, 11.60 MB, signed).
+- API 28 verified: Recents lists every call; long-press menu; contact-source checklist; dialpad
+  bar styling and 60 dp call button; unmerged Recents after the default merge change.
+- Accent auto/custom, dialpad size/position and history tap/swipe disabling compile and use the
+  same verified callbacks.
+
+### Next
+
+- Physical-device RC2 pass (Recents completeness, contact-source filtering, dialpad resizing).
+- Then remaining appearance (C7), Behaviour (C8), Advanced (C9), final polish.

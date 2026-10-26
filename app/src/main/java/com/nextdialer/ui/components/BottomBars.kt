@@ -7,11 +7,13 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.MoreVert
@@ -71,77 +74,100 @@ fun DialpadBottomBar(
     onSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
-            .height(92.dp)
-            .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .background(
+                theme.navBar.copy(alpha = if (theme.useWallpaper) 0.82f else 1f),
+            ),
     ) {
-        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            IconButton(onClick = onPaste, enabled = pasteAvailable) {
-                Icon(
-                    imageVector = Icons.Filled.ContentPaste,
-                    contentDescription = "Paste from clipboard",
-                    tint = if (pasteAvailable) {
-                        theme.textSecondary
-                    } else {
-                        theme.textSecondary.copy(alpha = 0.32f)
-                    },
-                    modifier = Modifier.size(23.dp),
-                )
-            }
-        }
-
-        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            IconButton(onClick = onContacts) {
-                Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = "Contacts",
-                    tint = theme.textSecondary,
-                    modifier = Modifier.size(26.dp),
-                )
-            }
-        }
-
-        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            if (dialpadVisible) {
-                Box(
-                    modifier = Modifier
-                        .size(58.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (canCall) theme.callGreen else theme.callGreen.copy(alpha = 0.45f),
-                        )
-                        .clickable(enabled = canCall, onClick = onCall),
-                    contentAlignment = Alignment.Center,
-                ) {
+        HorizontalDivider(color = theme.divider, thickness = 0.6.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .height(92.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                IconButton(onClick = onPaste, enabled = pasteAvailable) {
                     Icon(
-                        imageVector = Icons.Filled.Call,
-                        contentDescription = "Call",
-                        tint = Color.White,
-                        modifier = Modifier.size(27.dp),
+                        imageVector = Icons.Filled.ContentPaste,
+                        contentDescription = "Paste from clipboard",
+                        tint = if (pasteAvailable) {
+                            theme.textSecondary
+                        } else {
+                            theme.textSecondary.copy(alpha = 0.32f)
+                        },
+                        modifier = Modifier.size(23.dp),
                     )
                 }
-            } else {
-                Text(
-                    text = "SHOW DIALPAD",
-                    color = theme.accent,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp,
-                    maxLines = 1,
-                    softWrap = false,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .clickable(onClick = onShowDialpad)
-                        .padding(horizontal = 3.dp, vertical = 10.dp),
-                )
             }
-        }
 
-        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                IconButton(onClick = onContacts) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Contacts",
+                        tint = theme.textSecondary,
+                        modifier = Modifier.size(26.dp),
+                    )
+                }
+            }
+
+            Box(modifier = Modifier.weight(2f), contentAlignment = Alignment.Center) {
+                if (dialpadVisible) {
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (canCall) {
+                                    theme.callGreen
+                                } else {
+                                    theme.callGreen.copy(alpha = 0.45f)
+                                },
+                            )
+                            .clickable(enabled = canCall, onClick = onCall),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Call,
+                            contentDescription = "Call",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .clickable(onClick = onShowDialpad)
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Dialpad,
+                            contentDescription = null,
+                            tint = theme.accent,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = "SHOW DIALPAD",
+                            color = theme.accent,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.7.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
+                }
+            }
+
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -180,6 +206,7 @@ fun DialpadBottomBar(
             )
         }
     }
+}
 }
 
 /**
@@ -227,18 +254,31 @@ fun ListBottomBar(
                 )
             }
 
-            Text(
-                text = "SHOW DIALPAD",
-                color = theme.accent,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 1.4.sp,
+            Row(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .clip(RoundedCornerShape(50))
                     .clickable(onClick = onShowDialpad)
                     .padding(horizontal = 18.dp, vertical = 10.dp),
-            )
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Dialpad,
+                    contentDescription = null,
+                    tint = theme.accent,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = "SHOW DIALPAD",
+                    color = theme.accent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.7.sp,
+                    maxLines = 1,
+                    softWrap = false,
+                )
+            }
 
             Box(modifier = Modifier.align(Alignment.CenterEnd)) {
                 MainOverflowButton(

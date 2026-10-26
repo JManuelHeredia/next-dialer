@@ -16,6 +16,7 @@ import com.nextdialer.data.CallEntry
 import com.nextdialer.data.Contact
 import com.nextdialer.data.ContactDetail
 import com.nextdialer.data.ContactNumber
+import com.nextdialer.data.ContactSource
 import com.nextdialer.data.DeviceRepository
 import com.nextdialer.util.PhoneUtils
 import kotlinx.coroutines.Dispatchers
@@ -122,7 +123,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun performReload() {
         val contacts = if (_contactsGranted.value) {
             withContext(Dispatchers.IO) {
-                runCatching { repository.loadContacts() }.getOrDefault(emptyList())
+                runCatching {
+                    repository.loadContacts(settingsStore.state.value.contactSources)
+                }.getOrDefault(emptyList())
             }
         } else {
             emptyList()
@@ -193,6 +196,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun contactDetail(contactId: Long): ContactDetail? =
         withContext(Dispatchers.IO) {
             runCatching { repository.loadDetail(contactId) }.getOrNull()
+        }
+
+    suspend fun contactSources(): List<ContactSource> =
+        withContext(Dispatchers.IO) {
+            runCatching { repository.loadContactSources() }.getOrDefault(emptyList())
         }
 
     /**
