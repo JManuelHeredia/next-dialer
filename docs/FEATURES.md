@@ -80,10 +80,10 @@ same defaults where the feature is kept.
 | — | — | **New** | **Delete call history for this number** as a swipe action; confirms, then removes every call-log row matching the number (uses `ContentResolver.delete` and `WRITE_CALL_LOG`). |
 | — | — | **New** | **Dialpad search results** use the configured swipe actions, matching contacts behaviour. |
 | — | — | **New** | **Recents shows every call by default** (Merge calls by = None); the merge setting remains available. |
-| — | — | **New** | **Long-press call actions** (Call / Send SMS / View contact / Share / Delete history) on call rows. |
+| — | — | **New** | **Long-press call actions** (Call / Send SMS / View or Add contact / Edit / Favorite / Copy / Share / Delete contact / Delete history). |
 | — | — | **New** | **Contacts to show** checklist: All sources, Phone, SIM and each synced account, with contact counts. |
 | — | — | **New** | **Dialpad sizing**: width, height, left/centre/right position, and background opacity. |
-| — | — | **New** | **Accent auto + custom**: whitesmoke, almost black, Auto (background) and RRGGBB entry. Accent no longer tints the status bar. |
+| — | — | **New** | **Accent auto + custom**: whitesmoke, almost black, Auto (background) and RRGGBB entry. Accent no longer tints the status bar; Crystal status bar stays transparent. |
 | — | — | **New** | **Contact history rows** disable tap and swipe to prevent recursive navigation. |
 | — | — | **New** | **Animated keypad** collapse/expand when scrolling the recent list; SHOW DIALPAD restores it. |
 | — | — | **New** | **Swipe threshold/spacing**: 16 dp dead zone before the reveal starts, 4 dp gap to the row, actions fire only at full reveal. |

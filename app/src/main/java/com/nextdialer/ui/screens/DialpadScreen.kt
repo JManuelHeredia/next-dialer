@@ -342,7 +342,7 @@ fun DialpadScreen(
 
         val keyHeight = (56f * (settings.dialpadHeight.coerceIn(60, 120) / 100f)).dp
         val showKeypad = keypadVisible || number.isNotEmpty()
-        val panelAlpha = if (theme.useWallpaper) 0.78f else 1f
+        val panelAlpha = if (theme.useWallpaper) 0.82f else 1f
         val keysAlign = when (settings.dialpadPosition) {
             1 -> Alignment.CenterStart
             2 -> Alignment.CenterEnd
@@ -354,7 +354,7 @@ fun DialpadScreen(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(
-                    theme.surface.copy(
+                    theme.navBar.copy(
                         alpha = panelAlpha * (settings.dialpadOpacity.coerceIn(0, 100) / 100f),
                     ),
                 )

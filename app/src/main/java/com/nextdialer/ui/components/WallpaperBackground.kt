@@ -54,15 +54,13 @@ fun WallpaperBackground(
             )
         }
 
-        if (tintSystemBars && !fullScreen) {
+        if (tintSystemBars && !fullScreen && !theme.useWallpaper) {
             val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(topInset)
-                    .background(
-                        theme.topBar.copy(alpha = if (theme.useWallpaper) 0.72f else 1f),
-                    ),
+                    .background(theme.topBar),
             )
         }
     }

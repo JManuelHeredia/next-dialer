@@ -362,6 +362,20 @@
 - Accent auto/custom, dialpad size/position and history tap/swipe disabling compile and use the
   same verified callbacks.
 
+### RC2 follow-up
+
+- Unified the dialpad keys panel and bottom bar on the previous Recents nav-bar style; the
+  opacity slider now applies to that single container, removing the brown/black split.
+- Made the long-press menu dynamic:
+  - registered contact → View contact, Edit contact, Add/Remove favorite, Delete contact;
+  - unknown number → Add contact;
+  - always → Copy number and Share.
+  - Added `WRITE_CONTACTS` to the manifest and permission request for favorite/edit/delete.
+- Removed the Crystal status-bar tint for wallpaper themes: the Android status bar now stays
+  transparent over the wallpaper (the black top readability shade remains).
+- Rebuilt RC2 (`6A21F245…` SHA-256) and verified the unified panel, transparent status bar and
+  dynamic menu on the emulator.
+
 ### Next
 
 - Physical-device RC2 pass (Recents completeness, contact-source filtering, dialpad resizing).

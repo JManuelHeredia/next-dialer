@@ -76,10 +76,7 @@ fun DialpadBottomBar(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
-            .background(
-                theme.navBar.copy(alpha = if (theme.useWallpaper) 0.82f else 1f),
-            ),
+            .fillMaxWidth(),
     ) {
         HorizontalDivider(color = theme.divider, thickness = 0.6.dp)
         Row(
